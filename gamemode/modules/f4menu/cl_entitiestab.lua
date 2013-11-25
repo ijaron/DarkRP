@@ -101,7 +101,7 @@ local function canBuyShipment(ship)
 	local ply = LocalPlayer()
 	local cost = ship.getPrice and ship.getPrice(ply, ship.price) or ship.price
 
-	if not table.HasValue(ship.allowed, ply:Team()) then return false, true end
+	if not (table.HasValue(ship.allowed, "all") and ply:Team() == TEAM_GUN) and not table.HasValue(ship.allowed, ply:Team()) then return false, true end
 	if ship.customCheck and not ship.customCheck(ply) then return false, true end
 	if not ply:canAfford(cost) then return false, false end
 
@@ -151,7 +151,7 @@ local function canBuyGun(ship)
 	local ply = LocalPlayer()
 	local cost = ship.getPrice and ship.getPrice(ply, ship.pricesep) or ship.pricesep
 
-	if GAMEMODE.Config.restrictbuypistol and not table.HasValue(ship.allowed, ply:Team()) then return false, true end
+	if not table.HasValue(ship.allowed, "all") and not table.HasValue(ship.allowed, ply:Team()) then return false, true end
 	if ship.customCheck and not ship.customCheck(ply) then return false, true end
 	if not ply:canAfford(cost) then return false, false end
 

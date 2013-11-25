@@ -121,7 +121,7 @@ local function BuyShipment(ply, args)
 			foundKey = k
 			local canbecome = false
 			for a,b in pairs(v.allowed) do
-				if ply:Team() == b then
+				if ply:Team() == b or ("all" == b and ply:Team() == TEAM_GUN) then
 					canbecome = true
 				end
 			end
