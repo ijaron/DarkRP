@@ -467,7 +467,8 @@ end
 function GM:PlayerSetModel(ply)
 	local teamNr = ply:Team()
 	if RPExtraTeams[teamNr] and RPExtraTeams[teamNr].PlayerSetModel then
-		return RPExtraTeams[teamNr].PlayerSetModel(ply)
+		local model = RPExtraTeams[teamNr].PlayerSetModel(ply)
+		if model then ply:SetModel(model) return end
 	end
 
 	local EndModel = ""
@@ -497,8 +498,8 @@ function GM:PlayerSetModel(ply)
 		ply:SetModel(EndModel)
 	else
 		local cl_playermodel = ply:GetInfo("cl_playermodel")
-        local modelname = player_manager.TranslatePlayerModel(cl_playermodel)
-        ply:SetModel(ply:getPreferredModel(teamNr) or modelname)
+		local modelname = player_manager.TranslatePlayerModel(cl_playermodel)
+		ply:SetModel(ply:getPreferredModel(teamNr) or modelname)
 	end
 end
 
