@@ -15,16 +15,17 @@ DarkRP.disabledDefaults["modules"] = {
 	["voterestrictions"] = true,
 }
 
-DarkRP.disabledDefaults["agendas"]    = {}
-DarkRP.disabledDefaults["ammo"]       = {}
-DarkRP.disabledDefaults["doorgroups"] = {}
-DarkRP.disabledDefaults["entities"]   = {}
-DarkRP.disabledDefaults["food"]       = {}
-DarkRP.disabledDefaults["groupchat"]  = {}
-DarkRP.disabledDefaults["hitmen"]     = {}
-DarkRP.disabledDefaults["jobs"]       = {}
-DarkRP.disabledDefaults["shipments"]  = {}
-DarkRP.disabledDefaults["vehicles"]   = {}
+DarkRP.disabledDefaults["agendas"]    		= {}
+DarkRP.disabledDefaults["ammo"]       		= {}
+DarkRP.disabledDefaults["demotegroups"]		= {}
+DarkRP.disabledDefaults["doorgroups"] 		= {}
+DarkRP.disabledDefaults["entities"]   		= {}
+DarkRP.disabledDefaults["food"]       		= {}
+DarkRP.disabledDefaults["groupchat"]  		= {}
+DarkRP.disabledDefaults["hitmen"]     		= {}
+DarkRP.disabledDefaults["jobs"]       		= {}
+DarkRP.disabledDefaults["shipments"]  		= {}
+DarkRP.disabledDefaults["vehicles"]   		= {}
 
 if file.Exists("darkrp_config/disabled_defaults.lua", "LUA") then
 	if SERVER then AddCSLuaFile("darkrp_config/disabled_defaults.lua") end
@@ -36,7 +37,6 @@ Config
 ---------------------------------------------------------------------------*/
 local configFiles = {
 	"darkrp_config/settings.lua",
-	"darkrp_config/mysql.lua",
 	"darkrp_config/licenseweapons.lua",
 }
 
@@ -46,6 +46,7 @@ for _, File in pairs(configFiles) do
 	if SERVER then AddCSLuaFile(File) end
 	include(File)
 end
+if SERVER then include("darkrp_config/mysql.lua") end
 
 /*---------------------------------------------------------------------------
 Modules
@@ -100,6 +101,7 @@ local customFiles = {
 	"darkrp_customthings/groupchats.lua",
 	"darkrp_customthings/agendas.lua", -- has to be run after jobs.lua
 	"darkrp_customthings/doorgroups.lua", -- has to be run after jobs.lua
+	"darkrp_customthings/demotegroups.lua", -- has to be run after jobs.lua
 }
 local function loadCustomDarkRPItems()
 	for _, File in pairs(customFiles) do

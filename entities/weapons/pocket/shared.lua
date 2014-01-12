@@ -45,15 +45,18 @@ function SWEP:Initialize()
 end
 
 function SWEP:Deploy()
-	if not SERVER then return end
+	return true
+end
 
-	self.Owner:DrawViewModel(false)
-	self.Owner:DrawWorldModel(false)
+function SWEP:DrawWorldModel() end
+
+function SWEP:PreDrawViewModel(vm)
+	return true
 end
 
 function SWEP:Holster()
 	if not SERVER then return true end
-	
+
 	self.Owner:DrawViewModel(true)
 	self.Owner:DrawWorldModel(true)
 

@@ -128,10 +128,10 @@ function GM:PlayerSpawnedProp(ply, model, ent)
 
 	if GAMEMODE.Config.proppaying then
 		if ply:canAfford(GAMEMODE.Config.propcost) then
-			DarkRP.notify(ply, 0, 4, DarkRP.getPhrase("deducted", GAMEMODE.Config.currency, GAMEMODE.Config.propcost))
+			DarkRP.notify(ply, 0, 4, DarkRP.getPhrase("deducted_x", GAMEMODE.Config.currency, GAMEMODE.Config.propcost))
 			ply:addMoney(-GAMEMODE.Config.propcost)
 		else
-			DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("need", GAMEMODE.Config.currency, GAMEMODE.Config.propcost))
+			DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("need_x", GAMEMODE.Config.currency, GAMEMODE.Config.propcost))
 			return false
 		end
 	end
@@ -281,7 +281,7 @@ local function calcPlyCanHearPlayerVoice(listener)
 	listener.DrpCanHear = listener.DrpCanHear or {}
 	for _, talker in pairs(player.GetAll()) do
 		listener.DrpCanHear[talker] = not vrad or -- Voiceradius is off, everyone can hear everyone
-			(listener:GetShootPos():Distance(talker:GetShootPos()) < 550 and -- voiceradius is on and the two are within hearing distance
+			(listener:GetShootPos():DistToSqr(talker:GetShootPos()) < 302500 and -- voiceradius is on and the two are within hearing distance
 				(not dynv or IsInRoom(listener, talker))) -- Dynamic voice is on and players are in the same room
 	end
 end
@@ -528,9 +528,7 @@ local function initPlayer(ply)
 	-- a specific team for a certain length of time
 	for i = 1, #RPExtraTeams do
 		if GAMEMODE.Config.restrictallteams then
-			ply.bannedfrom[i] = 1
-		else
-			ply.bannedfrom[i] = 0
+			ply:teamBan(i, 0)
 		end
 	end
 end
@@ -538,7 +536,6 @@ end
 function GM:PlayerInitialSpawn(ply)
 	self.BaseClass:PlayerInitialSpawn(ply)
 	DarkRP.log(ply:Nick().." ("..ply:SteamID()..") has joined the game", Color(0, 130, 255))
-	ply.bannedfrom = {}
 	ply.DarkRPVars = ply.DarkRPVars or {}
 	ply:restorePlayerData()
 	initPlayer(ply)
@@ -684,6 +681,13 @@ local function selectDefaultWeapon(ply)
 end
 
 function GM:OnPlayerChangedTeam(ply, oldTeam, newTeam)
+	local agenda = ply:getAgendaTable()
+
+	if agenda and oldTeam == agenda.Manager and team.NumPlayers(oldTeam) == 0 then
+		agenda.text = nil
+	end
+
+	ply:setSelfDarkRPVar("agenda", agenda and agenda.text or nil)
 end
 
 local function removelicense(ply)
@@ -793,6 +797,17 @@ function GM:PlayerDisconnected(ply)
 
 	ply:keysUnOwnAll()
 	DarkRP.log(ply:Nick().." ("..ply:SteamID()..") disconnected", Color(0, 130, 255))
+
+	local agenda = ply:getAgendaTable()
+
+	-- Clear agenda
+	if agenda and ply:Team() == agenda.Manager and team.NumPlayers(ply:Team()) <= 1 then
+		agenda.text = nil
+		for k,v in pairs(player.GetAll()) do
+			if v:getAgendaTable() ~= agenda then continue end
+			v:setSelfDarkRPVar("agenda", agenda.text)
+		end
+	end
 
 	if RPExtraTeams[ply:Team()] and RPExtraTeams[ply:Team()].PlayerDisconnected then
 		RPExtraTeams[ply:Team()].PlayerDisconnected(ply)

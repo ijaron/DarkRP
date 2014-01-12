@@ -139,6 +139,10 @@ GM.Config.showcrosshairs				= true
 GM.Config.realisticfalldamage			= true
 -- printeroverheat - Can the default money printer overheat on its own?
 GM.Config.printeroverheat				= true
+-- weaponCheckerHideDefault - Hide default weapons when checking weapons
+GM.Config.weaponCheckerHideDefault		= true
+-- weaponCheckerHideNoLicense - Hide weapons that do not require a license
+GM.Config.weaponCheckerHideNoLicense	= false
 
 /*
 Value settings
@@ -239,6 +243,10 @@ GM.Config.printeroverheatchance			= 22
 /*---------------------------------------------------------------------------
 Other settings
 ---------------------------------------------------------------------------*/
+
+-- The classname of money packets. Use this to create your own money entity!
+-- Note: the money packet must support the "Setamount" method (or the amount DTVar)
+GM.Config.MoneyClass = "spawned_money"
 
 -- The skin DarkRP uses. Set to "default" to use the GMod default derma theme
 GM.Config.DarkRPSkin = "DarkRP"

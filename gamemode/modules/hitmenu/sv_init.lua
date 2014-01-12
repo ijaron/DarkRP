@@ -52,7 +52,8 @@ end
 function plyMeta:setHitTarget(target)
 	if not hits[self] then error("This person has no active hit!") end
 
-	self:setDarkRPVar("hitTarget", target)
+	self:setSelfDarkRPVar("hitTarget", target)
+	self:setDarkRPVar("hasHit", target and true or nil)
 end
 
 function plyMeta:setHitPrice(price)
@@ -198,6 +199,7 @@ hook.Add("PlayerDeath", "DarkRP Hitman System", function(ply, inflictor, attacke
 	end
 
 	for hitman, hit in pairs(hits) do
+		if not hitman or not IsValid(hitman) then hits[hitman] = nil continue end
 		if hitman:getHitTarget() == ply then
 			hitman:abortHit(DarkRP.getPhrase("target_died"))
 		end

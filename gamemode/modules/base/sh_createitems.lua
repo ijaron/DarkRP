@@ -357,7 +357,6 @@ local function addEntityCommands(tblEnt)
 			DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("incorrect_job", tblEnt.cmd))
 			return ""
 		end
-		local cmdname = string.gsub(tblEnt.ent, " ", "_")
 
 		if tblEnt.customCheck and not tblEnt.customCheck(ply) then
 			DarkRP.notify(ply, 1, 4, tblEnt.CustomCheckFailMsg or DarkRP.getPhrase("not_allowed_to_purchase"))
@@ -376,6 +375,15 @@ local function addEntityCommands(tblEnt)
 
 			return ""
 		end
+
+		local canbuy, suppress, message = hook.Call("canBuyCustomEntity", nil, ply, tblEnt)
+
+		if canbuy == false then
+			if not suppress and message then DarkRP.notify(ply, 1, 4, message) end
+			return ""
+		end
+
+
 		ply:addMoney(-tblEnt.price)
 
 		local trace = {}
@@ -486,9 +494,9 @@ function DarkRP.createShipment(name, model, entity, price, Amount_of_guns_in_one
 	local corrupt = checkValid(customShipment, validShipment)
 	if corrupt then ErrorNoHalt("Corrupt shipment \"" .. (name or "") .. "\": element " .. corrupt .. " is corrupt.\n") end
 
-	if SERVER and FPP then
-		FPP.AddDefaultBlocked(blockTypes, customShipment.entity)
-	end
+	-- if SERVER and FPP then
+	-- 	FPP.AddDefaultBlocked(blockTypes, customShipment.entity)
+	-- end
 
 	table.insert(CustomShipments, customShipment)
 	util.PrecacheModel(customShipment.model)
@@ -545,18 +553,26 @@ function DarkRP.createEntity(name, entity, model, price, max, command, classes, 
 	local corrupt = checkValid(tblEnt, validEntity)
 	if corrupt then ErrorNoHalt("Corrupt Entity \"" .. (name or "") .. "\": element " .. corrupt .. " is corrupt.\n") end
 
-	if SERVER and FPP then
-		FPP.AddDefaultBlocked(blockTypes, tblEnt.ent)
-	end
+	-- if SERVER and FPP then
+	-- 	FPP.AddDefaultBlocked(blockTypes, tblEnt.ent)
+	-- end
 
 	table.insert(DarkRPEntities, tblEnt)
 	timer.Simple(0, function() addEntityCommands(tblEnt) end)
 end
 AddEntity = DarkRP.createEntity
 
+-- here for backwards compatibility
 DarkRPAgendas = {}
 
+local agendas = {}
 plyMeta.getAgenda = fn.Compose{fn.Curry(fn.Flip(fn.GetValue), 2)(DarkRPAgendas), plyMeta.Team}
+
+function plyMeta:getAgendaTable()
+	local set = agendas[self:Team()]
+	return set and disjoint.FindSet(set).value or nil
+end
+
 function DarkRP.createAgenda(Title, Manager, Listeners)
 	if DarkRP.DARKRP_LOADING and DarkRP.disabledDefaults["agendas"][Title] then return end
 
@@ -565,7 +581,13 @@ function DarkRP.createAgenda(Title, Manager, Listeners)
 		if ply:IsAdmin() then ply:ChatPrint("WARNING: Agenda made incorrectly, there is no manager! failed to load!") end end)
 		return
 	end
-	DarkRPAgendas[Manager] = {Title = Title, Listeners = Listeners}
+
+	DarkRPAgendas[Manager] = {Manager = Manager, Title = Title, Listeners = Listeners} -- backwards compat
+
+	agendas[Manager] = disjoint.MakeSet(DarkRPAgendas[Manager])
+	for k,v in pairs(Listeners) do
+		agendas[v] = disjoint.MakeSet(v, agendas[Manager]) -- have the manager as parent
+	end
 end
 AddAgenda = DarkRP.createAgenda
 
@@ -606,3 +628,28 @@ function DarkRP.createAmmoType(ammoType, name, model, price, amountGiven, custom
 	table.insert(gm.AmmoTypes, ammo)
 end
 GM.AddAmmoType = function(GM, ...) DarkRP.createAmmoType(...) end
+
+local demoteGroups = {}
+function DarkRP.createDemoteGroup(name, tbl)
+	if DarkRP.DARKRP_LOADING and DarkRP.disabledDefaults["demotegroups"][name] then return end
+	if not tbl or not tbl[1] then error("No members in the demote group!") end
+
+	local set = demoteGroups[tbl[1]] or disjoint.MakeSet(tbl[1])
+	for i = 2, #tbl do
+		set = set + (demoteGroups[tbl[i]] or disjoint.MakeSet(tbl[i]))
+	end
+
+	for _, teamNr in pairs(tbl) do
+		if demoteGroups[teamNr] then
+			-- Unify the sets if there was already one there
+			demoteGroups[teamNr] = demoteGroups[teamNr] + set
+		else
+			demoteGroups[teamNr] = set
+		end
+	end
+end
+
+function DarkRP.getDemoteGroup(teamNr)
+	demoteGroups[teamNr] = demoteGroups[teamNr] or disjoint.MakeSet(teamNr)
+	return disjoint.FindSet(demoteGroups[teamNr])
+end

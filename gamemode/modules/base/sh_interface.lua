@@ -57,7 +57,22 @@ DarkRP.PLAYER.getDarkRPVar = DarkRP.stub{
 
 DarkRP.PLAYER.getAgenda = DarkRP.stub{
 	name = "getAgenda",
-	description = "Get the agenda a player manages.",
+	description = "(Deprecated, use getAgendaTable) Get the agenda a player manages.",
+	parameters = {
+	},
+	returns = {
+		{
+			name = "agenda",
+			description = "The agenda.",
+			type = "table"
+		}
+	},
+	metatable = DarkRP.PLAYER
+}
+
+DarkRP.PLAYER.getAgendaTable = DarkRP.stub{
+	name = "getAgendaTable",
+	description = "Get the agenda a player can see. Note: when a player is not the manager of an agenda, it returns the agenda of the manager.",
 	parameters = {
 	},
 	returns = {
@@ -358,6 +373,49 @@ DarkRP.createAmmoType = DarkRP.stub{
 	metatable = DarkRP
 }
 
+DarkRP.createDemoteGroup = DarkRP.stub{
+	name = "createDemoteGroup",
+	description = "Create a demote group. When you get banned (demoted) from one of the jobs in this group, you will be banned from every job in this group.",
+	parameters = {
+		{
+			name = "name",
+			description = "The name of the demote group.",
+			type = "string",
+			optional = false
+		},
+		{
+			name = "tbl",
+			description = "Table consisting of a list of job.",
+			type = "table",
+			optional = false
+		}
+	},
+	returns = {
+	},
+	metatable = DarkRP
+}
+
+DarkRP.getDemoteGroup = DarkRP.stub{
+	name = "getDemoteGroup",
+	description = "Get the demote group of a team. Every team in the same group will return the same object.",
+	parameters = {
+		{
+			name = "teamNr",
+			description = "Table consisting of a list of job.",
+			type = "number",
+			optional = false
+		}
+	},
+	returns = {
+		{
+			name = "set",
+			description = "The demote group identifier.",
+			type = "Disjoint-Set"
+		}
+	},
+	metatable = DarkRP
+}
+
 DarkRP.hookStub{
 	name = "DarkRPVarChanged",
 	description = "Called when a DarkRPVar was changed.",
@@ -384,5 +442,175 @@ DarkRP.hookStub{
 		}
 	},
 	returns = {
+	}
+}
+
+DarkRP.hookStub{
+	name = "canBuyPistol",
+	description = "Whether a player can buy a pistol.",
+	parameters = {
+		{
+			name = "ply",
+			description = "The player.",
+			type = "Player"
+		},
+		{
+			name = "shipmentTable",
+			description = "The table, as defined in the shipments file.",
+			type = "table"
+		}
+	},
+	returns = {
+		{
+			name = "canBuy",
+			description = "Whether it can be bought.",
+			type = "boolean"
+		},
+		{
+			name = "suppressMessage",
+			description = "Suppress the notification message when it cannot be bought.",
+			type = "boolean"
+		},
+		{
+			name = "message",
+			description = "A replacement for the message that shows if it cannot be bought.",
+			type = "string"
+		}
+	}
+}
+
+DarkRP.hookStub{
+	name = "canBuyShipment",
+	description = "Whether a player can buy a shipment.",
+	parameters = {
+		{
+			name = "ply",
+			description = "The player.",
+			type = "Player"
+		},
+		{
+			name = "shipmentTable",
+			description = "The table, as defined in the shipments file.",
+			type = "table"
+		}
+	},
+	returns = {
+		{
+			name = "canBuy",
+			description = "Whether it can be bought.",
+			type = "boolean"
+		},
+		{
+			name = "suppressMessage",
+			description = "Suppress the notification message when it cannot be bought.",
+			type = "boolean"
+		},
+		{
+			name = "message",
+			description = "A replacement for the message that shows if it cannot be bought.",
+			type = "string"
+		}
+	}
+}
+
+DarkRP.hookStub{
+	name = "canBuyVehicle",
+	description = "Whether a player can buy a vehicle.",
+	parameters = {
+		{
+			name = "ply",
+			description = "The player.",
+			type = "Player"
+		},
+		{
+			name = "vehicleTable",
+			description = "The table, as defined in the vehicles file.",
+			type = "table"
+		}
+	},
+	returns = {
+		{
+			name = "canBuy",
+			description = "Whether it can be bought.",
+			type = "boolean"
+		},
+		{
+			name = "suppressMessage",
+			description = "Suppress the notification message when it cannot be bought.",
+			type = "boolean"
+		},
+		{
+			name = "message",
+			description = "A replacement for the message that shows if it cannot be bought.",
+			type = "string"
+		}
+	}
+}
+
+DarkRP.hookStub{
+	name = "canBuyAmmo",
+	description = "Whether a player can buy ammo.",
+	parameters = {
+		{
+			name = "ply",
+			description = "The player.",
+			type = "Player"
+		},
+		{
+			name = "ammoTable",
+			description = "The table, as defined in the a ammo file.",
+			type = "table"
+		}
+	},
+	returns = {
+		{
+			name = "canBuy",
+			description = "Whether it can be bought.",
+			type = "boolean"
+		},
+		{
+			name = "suppressMessage",
+			description = "Suppress the notification message when it cannot be bought.",
+			type = "boolean"
+		},
+		{
+			name = "message",
+			description = "A replacement for the message that shows if it cannot be bought.",
+			type = "string"
+		}
+	}
+}
+
+DarkRP.hookStub{
+	name = "canBuyCustomEntity",
+	description = "Whether a player can a certain custom entity.",
+	parameters = {
+		{
+			name = "ply",
+			description = "The player.",
+			type = "Player"
+		},
+		{
+			name = "entTable",
+			description = "The table, as defined by the user.",
+			type = "table"
+		}
+	},
+	returns = {
+		{
+			name = "canBuy",
+			description = "Whether it can be bought.",
+			type = "boolean"
+		},
+		{
+			name = "suppressMessage",
+			description = "Suppress the notification message when it cannot be bought.",
+			type = "boolean"
+		},
+		{
+			name = "message",
+			description = "A replacement for the message that shows if it cannot be bought.",
+			type = "string"
+		}
 	}
 }

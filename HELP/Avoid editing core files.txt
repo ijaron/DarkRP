@@ -6,9 +6,9 @@ If this isn't possible, it should be MADE possible.
 
 Open an issue on GitHub if there is no
 - DarkRP function that allows you to change DarkRP the way you want:
-	http://wiki.darkrp.com/index.php/DarkRP:Functions
+	http://wiki.darkrp.com/index.php/Category:Functions
 - DarkRP Hook that allows you to change DarkRP the way you want:
-	http://wiki.darkrp.com/index.php/DarkRP:Hooks
+	http://wiki.darkrp.com/index.php/Category:Hooks
 
 /*---------------------------------------------------------------------------
             How to configure 
@@ -19,7 +19,7 @@ config folder inside it to configure DarkRP.
 /*---------------------------------------------------------------------------
             How to modify DarkRP without modifying the core files
 ---------------------------------------------------------------------------*/
-1. Go to DarkRP/gamemode/modules
+1. Go to darkrpmodification/lua/darkrp_modules
 2. Make a folder with any name, e.g. mydarkrpmod
 	it has to be lowercase
 	no spaces or weird characters
