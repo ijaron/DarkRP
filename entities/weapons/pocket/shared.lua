@@ -17,7 +17,7 @@ SWEP.DrawCrosshair = true
 SWEP.Base = "weapon_cs_base2"
 
 SWEP.Author = "DarkRP Developers"
-SWEP.Instructions = "Left click to pick up, right click to drop, reload for menu"
+SWEP.Instructions = "Left click to pick up\nRight click to drop\nReload to open the menu"
 SWEP.Contact = ""
 SWEP.Purpose = ""
 SWEP.IconLetter = ""
@@ -27,8 +27,8 @@ SWEP.ViewModelFlip = false
 SWEP.AnimPrefix	 = "rpg"
 SWEP.WorldModel	= ""
 
-SWEP.Spawnable = false
-SWEP.AdminSpawnable = true
+SWEP.Spawnable = true
+SWEP.AdminOnly = true
 SWEP.Category = "DarkRP (Utility)"
 SWEP.Primary.ClipSize = -1
 SWEP.Primary.DefaultClip = 0

@@ -19,6 +19,28 @@ DarkRP.findPlayer = DarkRP.stub{
 	metatable = DarkRP
 }
 
+DarkRP.formatMoney = DarkRP.stub{
+	name = "formatMoney",
+	description = "Format a number as a money value. Includes currency symbol.",
+	parameters = {
+		{
+			name = "amount",
+			description = "The money to format, e.g. 100000.",
+			type = "number",
+			optional = false
+		}
+	},
+	returns = {
+		{
+			name = "money",
+			description = "The money as a nice string, e.g. \"$100,000\".",
+			type = "string"
+		}
+	},
+	metatable = DarkRP
+}
+
+
 DarkRP.PLAYER.getJobTable = DarkRP.stub{
 	name = "getJobTable",
 	description = "Get the job table of a player.",
@@ -475,6 +497,11 @@ DarkRP.hookStub{
 			name = "message",
 			description = "A replacement for the message that shows if it cannot be bought.",
 			type = "string"
+		},
+		{
+			name = "price",
+			description = "An optional override for the price.",
+			type = "number"
 		}
 	}
 }
@@ -509,6 +536,11 @@ DarkRP.hookStub{
 			name = "message",
 			description = "A replacement for the message that shows if it cannot be bought.",
 			type = "string"
+		},
+		{
+			name = "price",
+			description = "An optional override for the price.",
+			type = "number"
 		}
 	}
 }
@@ -543,6 +575,11 @@ DarkRP.hookStub{
 			name = "message",
 			description = "A replacement for the message that shows if it cannot be bought.",
 			type = "string"
+		},
+		{
+			name = "price",
+			description = "An optional override for the price.",
+			type = "number"
 		}
 	}
 }
@@ -577,6 +614,11 @@ DarkRP.hookStub{
 			name = "message",
 			description = "A replacement for the message that shows if it cannot be bought.",
 			type = "string"
+		},
+		{
+			name = "price",
+			description = "An optional override for the price.",
+			type = "number"
 		}
 	}
 }
@@ -611,6 +653,11 @@ DarkRP.hookStub{
 			name = "message",
 			description = "A replacement for the message that shows if it cannot be bought.",
 			type = "string"
+		},
+		{
+			name = "price",
+			description = "An optional override for the price.",
+			type = "number"
 		}
 	}
 }

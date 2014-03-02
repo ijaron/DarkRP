@@ -7,14 +7,23 @@ local function createShipment(ply, args)
 
 	ent = IsValid(ent) and ent or ply:GetEyeTrace().Entity
 
-	if not IsValid(ent) or ent:GetClass() ~= "spawned_weapon" then
+	if not IsValid(ent) or ent:GetClass() ~= "spawned_weapon" or ent.PlayerUse == false then
 		DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("invalid_x", "argument", ""))
 		return
 	end
 
+	local pos = ent:GetPos()
+
+	if pos:Distance(ply:GetShootPos()) > 130 or not pos:isInSight({ent, ply} , ply) then
+		DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("distance_too_big"))
+		return
+	end
+
+	ent.PlayerUse = false
+
 	local shipID
 	for k,v in pairs(CustomShipments) do
-		if v.entity == ent.weaponclass then
+		if v.entity == ent:GetWeaponClass() then
 			shipID = k
 			break
 		end
@@ -41,7 +50,7 @@ local function createShipment(ply, args)
 	local phys = crate:GetPhysicsObject()
 	phys:Wake()
 end
-DarkRP.defineChatCommand("makeshipment", createShipment)
+DarkRP.defineChatCommand("makeshipment", createShipment, 0.3)
 
 /*---------------------------------------------------------------------------
 Split a shipment in two
@@ -52,15 +61,25 @@ local function splitShipment(ply, args)
 
 	ent = IsValid(ent) and ent or ply:GetEyeTrace().Entity
 
-	if not IsValid(ent) or ent:GetClass() ~= "spawned_shipment" or ent:Getcount() < 2 then
+	if not IsValid(ent) or ent:GetClass() ~= "spawned_shipment" or ent:Getcount() < 2 or ent.locked then
 		DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("invalid_x", "argument", ""))
+		return
+	end
+
+	local pos = ent:GetPos()
+
+	if pos:Distance(ply:GetShootPos()) > 130 or not pos:isInSight({ent, ply} , ply) then
+		DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("distance_too_big"))
 		return
 	end
 
 	local count = math.floor(ent:Getcount() / 2)
 	ent:Setcount(ent:Getcount() - count)
 
+	ent:StartSpawning()
+
 	local crate = ents.Create("spawned_shipment")
+	crate.locked = true
 	crate.SID = ply.SID
 	crate:SetPos(ent:GetPos())
 	crate.nodupe = true
@@ -76,4 +95,4 @@ local function splitShipment(ply, args)
 	local phys = crate:GetPhysicsObject()
 	phys:Wake()
 end
-DarkRP.defineChatCommand("splitshipment", splitShipment)
+DarkRP.defineChatCommand("splitshipment", splitShipment, 0.3)

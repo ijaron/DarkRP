@@ -55,7 +55,7 @@ function PANEL:Think()
 	end
 
 	-- update the price (so the hitman can't scam)
-	self.price:SetText(DarkRP.getPhrase("price", GAMEMODE.Config.currency, self:GetHitman():getHitPrice()))
+	self.price:SetText(DarkRP.getPhrase("priceTag", DarkRP.formatMoney(self:GetHitman():getHitPrice()), ""))
 	self.price:SizeToContents()
 end
 
@@ -82,7 +82,7 @@ function PANEL:PerformLayout()
 
 	self.price:SetFont("HUDNumber5")
 	self.price:SetColor(Color(255, 0, 0, 255))
-	self.price:SetText(DarkRP.getPhrase("price", GAMEMODE.Config.currency, self:GetHitman():getHitPrice()))
+	self.price:SetText(DarkRP.getPhrase("priceTag", DarkRP.formatMoney(self:GetHitman():getHitPrice()), ""))
 	self.price:SetPos(20 + 128 + 20, 20 + self.title:GetTall() + 20)
 	self.price:SizeToContents(true)
 
@@ -191,12 +191,12 @@ function PANEL:PerformLayout()
 	if not IsValid(ply) then self:Remove() return end
 
 	self.lblName:SetFont("UiBold")
-	self.lblName:SetText(ply:Nick())
+	self.lblName:SetText(DarkRP.deLocalise(ply:Nick()))
 	self.lblName:SizeToContents()
 	self.lblName:SetPos(10, 1)
 
 	self.lblTeam:SetFont("UiBold")
-	self.lblTeam:SetText((ply.DarkRPVars and ply:getDarkRPVar("job")) or team.GetName(ply:Team()))
+	self.lblTeam:SetText((ply.DarkRPVars and DarkRP.deLocalise(ply:getDarkRPVar("job"))) or team.GetName(ply:Team()))
 	self.lblTeam:SizeToContents()
 	self.lblTeam:SetPos(self:GetWide() / 2, 1)
 end

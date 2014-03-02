@@ -7,7 +7,7 @@ function CPPI:GetName()
 end
 
 function CPPI:GetVersion()
-	return "addon.2"
+	return "universal.1"
 end
 
 function CPPI:GetInterfaceVersion()
@@ -35,6 +35,7 @@ end
 
 local ENTITY = FindMetaTable("Entity")
 function ENTITY:CPPIGetOwner()
+	if CLIENT then return nil, CPPI.CPPI_NOTIMPLEMENTED end
 	local Owner = self.FPPOwner
 	if not IsValid(Owner) or not Owner:IsPlayer() then return Owner, self.FPPOwnerID end
 	return Owner, Owner:UniqueID()
@@ -52,7 +53,7 @@ if SERVER then
 					ent.FPPOwnerID = ply:SteamID()
 				end
 			end
-		end		
+		end
 		return true
 	end
 

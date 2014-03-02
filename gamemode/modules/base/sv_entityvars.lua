@@ -23,7 +23,7 @@ function meta:setDarkRPVar(var, value, target)
 	self.DarkRPVars[var] = value
 
 	net.Start("DarkRP_PlayerVar")
-		net.WriteFloat(self:EntIndex())
+		net.WriteFloat(self:UserID())
 		net.WriteString(var)
 		net.WriteType(value)
 	net.Send(target)
@@ -83,8 +83,8 @@ local function setRPName(ply, cmd, args)
 		return
 	end
 
-	if ply:EntIndex() ~= 0 and not ply:IsSuperAdmin() then
-		ply:PrintMessage(2, DarkRP.getPhrase("need_sadmin", "rp_setname"))
+	if ply:EntIndex() ~= 0 and not ply:IsAdmin() then
+		ply:PrintMessage(2, DarkRP.getPhrase("need_admin", "rp_setname"))
 		return
 	end
 
@@ -97,17 +97,17 @@ local function setRPName(ply, cmd, args)
 		target:setDarkRPVar("rpname", args[2])
 
 		if ply:EntIndex() == 0 then
-			print(DarkRP.getPhrase("you_set_x_name_to_y", oldname, args[2]))
+			print(DarkRP.getPhrase("you_set_x_name", oldname, args[2]))
 			nick = "Console"
 		else
-			ply:PrintMessage(2, DarkRP.getPhrase("you_set_x_name_to_y", oldname, args[2]))
+			ply:PrintMessage(2, DarkRP.getPhrase("you_set_x_name", oldname, args[2]))
 			nick = ply:Nick()
 		end
-		target:PrintMessage(2, DarkRP.getPhrase("x_set_your_name_to_y", nick, args[2]))
+		target:PrintMessage(2, DarkRP.getPhrase("x_set_your_name", nick, args[2]))
 		if ply:EntIndex() == 0 then
-			DarkRP.log("Console set "..target:SteamName().."'s name to " .. args[2], Color(30, 30, 30))
+			DarkRP.log("Console set " .. target:SteamName() .. "'s name to " .. args[2], Color(30, 30, 30))
 		else
-			DarkRP.log(ply:Nick().." ("..ply:SteamID()..") set "..target:SteamName().."'s name to " .. args[2], Color(30, 30, 30))
+			DarkRP.log(ply:Nick() .. " (" .. ply:SteamID() .. ") set " .. target:SteamName() .. "'s name to " .. args[2], Color(30, 30, 30))
 		end
 	else
 		if ply:EntIndex() == 0 then
@@ -147,17 +147,9 @@ local function RPName(ply, args)
 		return ""
 	end
 
-	local allowed = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-	'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
-	'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l',
-	'z', 'x', 'c', 'v', 'b', 'n', 'm', ' ',
-	'(', ')', '[', ']', '!', '@', '#', '$', '%', '^', '&', '*', '-', '_', '=', '+', '|', '\\'}
-
-	for k in string.gmatch(args, ".") do
-		if not table.HasValue(allowed, string.lower(k)) then
-			DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("unable", "RPname", k))
-			return ""
-		end
+	if not string.match(args, "^[a-zA-Z0-9 ]+$") then
+		DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("unable", "RPname", "Bad name"))
+		return ""
 	end
 	ply:setRPName(args)
 	ply.LastNameChange = CurTime()

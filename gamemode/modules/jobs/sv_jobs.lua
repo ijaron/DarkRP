@@ -15,8 +15,8 @@ function meta:changeTeam(t, force)
 		return false
 	end
 
-	if self.LastJob and 10 - (CurTime() - self.LastJob) >= 0 and not force then
-		DarkRP.notify(self, 1, 4, DarkRP.getPhrase("have_to_wait",  math.ceil(10 - (CurTime() - self.LastJob)), "/job"))
+	if self.LastJob and GAMEMODE.Config.changejobtime - (CurTime() - self.LastJob) >= 0 and not force then
+		DarkRP.notify(self, 1, 4, DarkRP.getPhrase("have_to_wait",  math.ceil(GAMEMODE.Config.changejobtime - (CurTime() - self.LastJob)), "/job"))
 		return false
 	end
 
@@ -134,8 +134,8 @@ function meta:changeTeam(t, force)
 		effectdata:SetScale(1)
 		util.Effect("entity_remove", effectdata)
 		hook.Call("UpdatePlayerSpeed", GAMEMODE, self)
-		GAMEMODE:PlayerSetModel(self)
-		GAMEMODE:PlayerLoadout(self)
+		gamemode.Call("PlayerSetModel", self)
+		gamemode.Call("PlayerLoadout", self)
 	else
 		self:KillSilent()
 	end
@@ -342,9 +342,21 @@ local function SwitchJob(ply) --Idea by Godness.
 
 	local eyetrace = ply:GetEyeTrace()
 	if not eyetrace or not eyetrace.Entity or not eyetrace.Entity:IsPlayer() then return "" end
+
+	local team1 = RPExtraTeams[ply:Team()]
+	local team2 = RPExtraTeams[eyetrace.Entity:Team()]
+
+	if not team1 or not team2 then return "" end
+	if team1.customCheck and not team1.customCheck(eyetrace.Entity) or team2.customCheck and not team2.customCheck(ply) then
+		-- notify only the player trying to switch
+		DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("unable", "switch jobs", ""))
+		return ""
+	end
+
 	ply.RequestedJobSwitch = true
 	DarkRP.createQuestion(DarkRP.getPhrase("job_switch_question", ply:Nick()), "switchjob"..tostring(ply:EntIndex()), eyetrace.Entity, 30, ExecSwitchJob, ply, eyetrace.Entity)
 	DarkRP.notify(ply, 0, 4, DarkRP.getPhrase("job_switch_requested"))
+
 	return ""
 end
 DarkRP.defineChatCommand("switchjob", SwitchJob)

@@ -5,7 +5,6 @@ ENT.Instructions = "Use /addlaws to add a custom law, /removelaw <num> to remove
 ENT.Author = "Drakehawke"
 
 ENT.Spawnable = false
-ENT.AdminSpawnable = false
 
 local plyMeta = FindMetaTable("Player")
 DarkRP.declareChatCommand{
@@ -27,4 +26,60 @@ DarkRP.declareChatCommand{
 	description = "Place a laws board.",
 	delay = 1.5,
 	condition = plyMeta.isMayor
+}
+
+DarkRP.getLaws = DarkRP.stub{
+	name = "getLaws",
+	description = "Get the table of all current laws.",
+	parameters = {
+	},
+	returns = {
+		{
+			name = "laws",
+			description = "A table of all current laws.",
+			type = "table"
+		}
+	},
+	metatable = DarkRP,
+	realm = "Shared"
+}
+
+DarkRP.hookStub{
+	name = "addLaw",
+	description = "Called when a law is added.",
+	parameters = {
+		{
+			name = "index",
+			description = "Index of the law",
+			type = "number"
+		},
+		{
+			name = "law",
+			description = "Law string",
+			type = "string"
+		}
+	},
+	returns = {
+	},
+	realm = "Shared"
+}
+
+DarkRP.hookStub{
+	name = "removeLaw",
+	description = "Called when a law is removed.",
+	parameters = {
+		{
+			name = "index",
+			description = "Index of law",
+			type = "number"
+		},
+		{
+			name = "law",
+			description = "Law string",
+			type = "string"
+		}
+	},
+	returns = {
+	},
+	realm = "Shared"
 }

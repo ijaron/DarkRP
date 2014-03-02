@@ -14,7 +14,7 @@ end
 -- Variables that are used on both client and server
 
 SWEP.Author = "DarkRP Developers"
-SWEP.Instructions = "Left click to pick a lock"
+SWEP.Instructions = "Left or right click to pick a lock"
 SWEP.Contact = ""
 SWEP.Purpose = ""
 
@@ -25,8 +25,8 @@ SWEP.WorldModel = Model("models/weapons/w_crowbar.mdl")
 
 SWEP.UseHands = true
 
-SWEP.Spawnable = false
-SWEP.AdminSpawnable = true
+SWEP.Spawnable = true
+SWEP.AdminOnly = true
 SWEP.Category = "DarkRP (Utility)"
 
 SWEP.Sound = Sound("physics/wood/wood_box_impact_hard3.wav")
@@ -181,7 +181,7 @@ function SWEP:DrawHUD()
 		local cornerRadius = math.Min(8, BarWidth/3*2 - BarWidth/3*2%2)
 		draw.RoundedBox(cornerRadius, x+8, y+8, BarWidth, height-16, Color(255-(status*255), 0+(status*255), 0, 255))
 
-		draw.SimpleText(DarkRP.getPhrase("picking_lock")..self.Dots, "Trebuchet24", w/2, y + height/2, Color(255,255,255,255), 1, 1)
+		draw.DrawNonParsedSimpleText(DarkRP.getPhrase("picking_lock")..self.Dots, "Trebuchet24", w/2, y + height/2, Color(255,255,255,255), 1, 1)
 	end
 end
 

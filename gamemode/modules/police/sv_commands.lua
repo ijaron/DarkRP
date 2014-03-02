@@ -37,7 +37,7 @@ local function EnterLottery(answer, ent, initiator, target, TimeIsUp)
 		end
 		table.insert(LotteryPeople, target)
 		target:addMoney(-LotteryAmount)
-		DarkRP.notify(target, 0,4, DarkRP.getPhrase("lottery_entered", GAMEMODE.Config.currency..tostring(LotteryAmount)))
+		DarkRP.notify(target, 0,4, DarkRP.getPhrase("lottery_entered", DarkRP.formatMoney(LotteryAmount)))
 	elseif answer ~= nil and not table.HasValue(LotteryPeople, target) then
 		DarkRP.notify(target, 1,4, DarkRP.getPhrase("lottery_not_entered", "You"))
 	end
@@ -51,7 +51,7 @@ local function EnterLottery(answer, ent, initiator, target, TimeIsUp)
 		end
 		local chosen = LotteryPeople[math.random(1, #LotteryPeople)]
 		chosen:addMoney(#LotteryPeople * LotteryAmount)
-		DarkRP.notifyAll(0,10, DarkRP.getPhrase("lottery_won", chosen:Nick(), GAMEMODE.Config.currency .. tostring(#LotteryPeople * LotteryAmount) ))
+		DarkRP.notifyAll(0,10, DarkRP.getPhrase("lottery_won", chosen:Nick(), DarkRP.formatMoney(#LotteryPeople * LotteryAmount)))
 	end
 end
 
@@ -88,7 +88,7 @@ local function DoLottery(ply, amount)
 	LotteryPeople = {}
 	for k,v in pairs(player.GetAll()) do
 		if v ~= ply then
-			DarkRP.createQuestion(DarkRP.getPhrase("lottery_started", GAMEMODE.Config.currency, LotteryAmount), "lottery"..tostring(k), v, 30, EnterLottery, ply, v)
+			DarkRP.createQuestion(DarkRP.getPhrase("lottery_has_started", DarkRP.formatMoney(LotteryAmount)), "lottery"..tostring(k), v, 30, EnterLottery, ply, v)
 		end
 	end
 	timer.Create("Lottery", 30, 1, function() EnterLottery(nil, nil, nil, nil, true) end)
@@ -105,13 +105,10 @@ local function WaitLock()
 	timer.Destroy("spamlock")
 end
 
-function DarkRP.lockdown(ply, args, cmdargs)
+function DarkRP.lockdown(ply)
 	if lstat then
 		if ply:EntIndex() == 0 then
 			print(DarkRP.getPhrase("unable", "/lockdown", DarkRP.getPhrase("stop_lockdown")))
-			return
-		elseif cmdargs then
-			ply:PrintMessage(HUD_PRINTCONSOLE, DarkRP.getPhrase("unable", "/lockdown", DarkRP.getPhrase("stop_lockdown")))
 			return
 		else
 			DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("unable", "/lockdown", DarkRP.getPhrase("stop_lockdown")))
@@ -129,8 +126,6 @@ function DarkRP.lockdown(ply, args, cmdargs)
 	else
 		if ply:EntIndex() == 0 then
 			print(DarkRP.getPhrase("incorrect_job", "/lockdown", ""))
-		elseif cmdargs then
-			ply:PrintMessage(HUD_PRINTCONSOLE, DarkRP.getPhrase("incorrect_job", "/lockdown", ""))
 		else
 			DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("incorrect_job", "/lockdown", ""))
 		end
@@ -140,13 +135,10 @@ end
 concommand.Add("rp_lockdown", function(ply) DarkRP.lockdown(ply) end)
 DarkRP.defineChatCommand("lockdown", function(ply) DarkRP.lockdown(ply) end)
 
-function DarkRP.unLockdown(ply, args, cmdargs)
+function DarkRP.unLockdown(ply)
 	if not lstat or wait_lockdown then
 		if ply:EntIndex() == 0 then
-			print(DarkRP.getPhrase("unable", "/ulockdown", DarkRP.getPhrase("lockdown_ended")))
-			return
-		elseif cmdargs then
-			ply:PrintMessage(HUD_PRINTCONSOLE, DarkRP.getPhrase("unable", "/unlockdown", DarkRP.getPhrase("lockdown_ended")))
+			print(DarkRP.getPhrase("unable", "/unlockdown", DarkRP.getPhrase("lockdown_ended")))
 			return
 		else
 			DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("unable", "/unlockdown", DarkRP.getPhrase("lockdown_ended")))
@@ -163,8 +155,6 @@ function DarkRP.unLockdown(ply, args, cmdargs)
 	else
 		if ply:EntIndex() == 0 then
 			print(DarkRP.getPhrase("incorrect_job", "/unlockdown", ""))
-		elseif cmdargs then
-			ply:PrintMessage(HUD_PRINTCONSOLE, DarkRP.getPhrase("incorrect_job", "/unlockdown", ""))
 		else
 			DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("incorrect_job", "/unlockdown", ""))
 		end

@@ -180,16 +180,20 @@ end
 concommand.Add("FPP_ShareProp", ShareProp)
 
 local function RetrieveSettings()
-	for k,v in pairs(FPP.Settings) do
+	for k in pairs(FPP.Settings) do
 		MySQLite.query("SELECT setting, var FROM "..k..";", function(data)
-
-			if data then
-				local i = 0
-				for key, value in pairs(data) do
-					FPP.Settings[k][value.var] = tonumber(value.setting)
-					i = i + 0.05
-					timer.Simple(i, function() RunConsoleCommand("_"..k.."_"..value.var, tonumber(value.setting)) end)
+			if not data then return end
+			local i = 0
+			for _,value in pairs(data) do
+				if FPP.Settings[k][value.var] == nil then
+					-- Likely an old setting that has since been removed from FPP.
+					-- This setting however still exists in the DB. Time to remove it.
+					MySQLite.query("DELETE FROM "..k.." WHERE var = "..sql.SQLStr(value.var)..";")
+					continue
 				end
+				FPP.Settings[k][value.var] = tonumber(value.setting)
+				i = i + 0.05
+				timer.Simple(i, function() RunConsoleCommand("_"..k.."_"..value.var, tonumber(value.setting)) end)
 			end
 		end)
 	end
@@ -273,11 +277,10 @@ local function RetrieveBlockedModels()
 	-- Sometimes when the database retrieval is corrupt,
 	-- only parts of the table will be retrieved
 	-- This is a workaround
-	if not MySQLite.databaseObject then
+	if not MySQLite.isMySQL() then
 		local count = MySQLite.queryValue("SELECT COUNT(*) FROM FPP_BLOCKEDMODELS1;") or 0
-
-		if count == 0 then
-			FPP.generateDefaultBlocked() -- Load the default blocked models on first run
+		if tonumber(count) == 0 then
+			FPP.AddDefaultBlockedModels() -- Load the default blocked models on first run
 		end
 
 		-- Select with offsets of a thousand.
@@ -296,7 +299,7 @@ local function RetrieveBlockedModels()
 	-- Retrieve the data normally from MySQL
 	MySQLite.query("SELECT * FROM FPP_BLOCKEDMODELS1;", function(data)
 		if not data or #data == 0 then
-			FPP.generateDefaultBlocked()
+			FPP.AddDefaultBlockedModels() -- Load the default blocked models on first run
 		end
 
 		for k,v in pairs(data or {}) do
@@ -320,10 +323,7 @@ local function RetrieveRestrictedTools()
 		if type(perplayerData) ~= "table" then return end
 		for k,v in pairs(perplayerData) do
 			FPP.RestrictedToolsPlayers[v.toolname] = FPP.RestrictedToolsPlayers[v.toolname] or {}
-			local convert = {}
-			convert["1"] = true
-			convert["0"] = false
-			FPP.RestrictedToolsPlayers[v.toolname][v.steamid] = convert[v.allow]
+			FPP.RestrictedToolsPlayers[v.toolname][v.steamid] = tobool(v.allow)
 		end
 	end)
 
@@ -746,9 +746,11 @@ function FPP.Init()
 		MySQLite.queueQuery("CREATE TABLE IF NOT EXISTS FPP_GROUPS3(groupname VARCHAR(40) NOT NULL, allowdefault INTEGER NOT NULL, PRIMARY KEY(groupname));")
 		MySQLite.queueQuery("CREATE TABLE IF NOT EXISTS FPP_GROUPTOOL(groupname VARCHAR(40) NOT NULL, tool VARCHAR(45) NOT NULL, PRIMARY KEY(groupname, tool));")
 		MySQLite.queueQuery("CREATE TABLE IF NOT EXISTS FPP_GROUPMEMBERS1(steamid VARCHAR(40) NOT NULL, groupname VARCHAR(40) NOT NULL, PRIMARY KEY(steamid));")
+
 		MySQLite.queueQuery("CREATE TABLE IF NOT EXISTS FPP_BLOCKEDMODELS1(model VARCHAR(140) NOT NULL PRIMARY KEY);")
 
 	MySQLite.commit(function()
+
 		RetrieveBlocked()
 		RetrieveBlockedModels()
 		RetrieveRestrictedTools()

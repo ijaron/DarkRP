@@ -152,7 +152,13 @@ function PANEL:setDarkRPItem(item)
 	self:SetBorderColor(Color(140, 0, 0, 180))
 	self:SetModel(item.model)
 	self:SetText(item.label or item.name)
-	self:SetTextRight(string.format("%s%s", GAMEMODE.Config.currency, cost))
+	self:SetTextRight(DarkRP.formatMoney(cost))
+end
+
+function PANEL:updatePrice(price)
+	if not price then return end
+
+	self:SetTextRight(DarkRP.formatMoney(price))
 end
 
 derma.DefineControl("F4MenuEntityButton", "", PANEL, "F4MenuItemButton")
@@ -169,9 +175,15 @@ function PANEL:setDarkRPItem(item)
 	self:SetBorderColor(Color(140, 0, 0, 180))
 	self:SetModel(item.model)
 	self:SetText(item.label or item.name)
-	self:SetTextRight(string.format("%s%s", GAMEMODE.Config.currency, cost))
+	self:SetTextRight(DarkRP.formatMoney(cost))
 
 	self.DoClick = fn.Partial(RunConsoleCommand, "DarkRP", "buy", self.DarkRPItem.name)
+end
+
+function PANEL:updatePrice(price)
+	if not price then return end
+
+	self:SetTextRight(DarkRP.formatMoney(price))
 end
 
 derma.DefineControl("F4MenuPistolButton", "", PANEL, "F4MenuItemButton")

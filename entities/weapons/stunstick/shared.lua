@@ -13,7 +13,7 @@ end
 SWEP.Base = "weapon_cs_base2"
 
 SWEP.Author = "DarkRP Developers"
-SWEP.Instructions = "Left click to discipline, right click to kill"
+SWEP.Instructions = "Left click to discipline\nRight click to kill"
 SWEP.Contact = ""
 SWEP.Purpose = ""
 SWEP.IconLetter = ""
@@ -22,8 +22,8 @@ SWEP.ViewModelFOV = 62
 SWEP.ViewModelFlip = false
 SWEP.AnimPrefix = "stunstick"
 
-SWEP.Spawnable = false
-SWEP.AdminSpawnable = true
+SWEP.Spawnable = true
+SWEP.AdminOnly = true
 SWEP.Category = "DarkRP (Utility)"
 
 SWEP.NextStrike = 0
@@ -156,7 +156,7 @@ function SWEP:PrimaryAttack()
 		if FPP and FPP.PlayerCanTouchEnt(self.Owner, self, "EntityDamage1", "FPP_ENTITYDAMAGE1") then
 			if trace.Entity.SeizeReward and not trace.Entity.burningup and self.Owner:isCP() and trace.Entity.Getowning_ent and self.Owner != trace.Entity:Getowning_ent() then
 				self.Owner:addMoney( trace.Entity.SeizeReward )
-				DarkRP.notify( self.Owner, 1, 4, DarkRP.getPhrase("you_received_x", GAMEMODE.Config.currency .. trace.Entity.SeizeReward, DarkRP.getPhrase("bonus_destroying_entity")))
+				DarkRP.notify( self.Owner, 1, 4, DarkRP.getPhrase("you_received_x", DarkRP.formatMoney(trace.Entity.SeizeReward), DarkRP.getPhrase("bonus_destroying_entity")))
 			end
 			trace.Entity:TakeDamage(1000, self.Owner, self) -- for illegal entities
 		end
@@ -221,7 +221,7 @@ function SWEP:SecondaryAttack()
 			if FPP and FPP.PlayerCanTouchEnt(ply, self, "EntityDamage1", "FPP_ENTITYDAMAGE1") then
 				if trace.Entity.Getowning_ent and trace.Entity.SeizeReward and trace.Entity:Getowning_ent() != self.Owner then
 					self.Owner:addMoney( trace.Entity.SeizeReward )
-					DarkRP.notify( self.Owner, 1, 4, DarkRP.getPhrase("you_received_x", GAMEMODE.Config.currency .. trace.Entity.SeizeReward, DarkRP.getPhrase("bonus_destroying_entity")))
+					DarkRP.notify( self.Owner, 1, 4, DarkRP.getPhrase("you_received_x", DarkRP.formatMoney(trace.Entity.SeizeReward), DarkRP.getPhrase("bonus_destroying_entity")))
 				end
 				trace.Entity:TakeDamage(990, self.Owner, self)
 			end

@@ -195,6 +195,9 @@ Interface functions
 function meta:addPocketItem(ent)
 	if not IsValid(ent) then error("Entity not valid", 2) end
 
+	-- This item cannot be used until it has been removed
+	ent.USED = true
+
 	local serialized = serialize(ent)
 
 	hook.Call("onPocketItemAdded", nil, self, ent, serialized)
@@ -222,6 +225,9 @@ function meta:dropPocketItem(item)
 
 	local id = self.darkRPPocket[item]
 	local ent = deserialize(self, id)
+
+	-- reset USED status
+	ent.USED = nil
 
 	self:removePocketItem(item)
 	return ent
@@ -275,6 +281,7 @@ local function canPocket(ply, item)
 	if item.jailWall then return false, DarkRP.getPhrase("cannot_pocket_x") end
 	if GAMEMODE.Config.PocketBlacklist[class] then return false, DarkRP.getPhrase("cannot_pocket_x") end
 	if string.find(class, "func_") then return false, DarkRP.getPhrase("cannot_pocket_x") end
+	if item:IsRagdoll() then return false, DarkRP.getPhrase("cannot_pocket_x") end
 
 	local trace = ply:GetEyeTrace()
 	if ply:EyePos():Distance(trace.HitPos) > 150 then return false end

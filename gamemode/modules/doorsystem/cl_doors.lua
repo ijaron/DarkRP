@@ -28,7 +28,7 @@ function meta:drawOwnableInfo()
 	if self:isKeysOwned() then
 		table.insert(doorInfo, self:getDoorOwner():Nick())
 		for k,v in pairs(self:getKeysCoOwners() or {}) do
-			local ent = Entity(k)
+			local ent = Player(k)
 			if not IsValid(ent) or not ent:IsPlayer() then continue end
 			table.insert(doorInfo, ent:Nick())
 		end
@@ -38,7 +38,7 @@ function meta:drawOwnableInfo()
 			table.insert(doorInfo, DarkRP.getPhrase("keys_other_allowed"))
 
 			for k,v in pairs(allowedCoOwn) do
-				local ent = Entity(k)
+				local ent = Player(k)
 				if not IsValid(ent) or not ent:IsPlayer() then continue end
 				table.insert(doorInfo, ent:Nick())
 			end
@@ -47,7 +47,7 @@ function meta:drawOwnableInfo()
 		table.insert(doorInfo, doorGroup)
 	elseif doorTeams then
 		for k, v in pairs(doorTeams) do
-			if not v then continue end
+			if not v or not RPExtraTeams[k] then continue end
 
 			table.insert(doorInfo, RPExtraTeams[k].name)
 		end
@@ -69,8 +69,8 @@ function meta:drawOwnableInfo()
 	end
 
 	local x, y = ScrW()/2, ScrH() / 2
-	draw.DrawText(table.concat(doorInfo, "\n"), "TargetID", x , y + 1 , black, 1)
-	draw.DrawText(table.concat(doorInfo, "\n"), "TargetID", x, y, (blocked or owned) and white or red, 1)
+	draw.DrawNonParsedText(table.concat(doorInfo, "\n"), "TargetID", x , y + 1 , black, 1)
+	draw.DrawNonParsedText(table.concat(doorInfo, "\n"), "TargetID", x, y, (blocked or owned) and white or red, 1)
 end
 
 
@@ -131,4 +131,4 @@ net.Receive("DarkRP_RemoveDoorData", removeDoorData)
 /*---------------------------------------------------------------------------
 Hooks
 ---------------------------------------------------------------------------*/
-hook.Add("InitPostEntity", "getDoorData", fn.Curry(RunConsoleCommand, 2)("_sendAllDoorData"))
+timer.Simple(1, fn.Curry(RunConsoleCommand, 2)("_sendAllDoorData"))

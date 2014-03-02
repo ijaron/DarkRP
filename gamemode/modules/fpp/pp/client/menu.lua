@@ -20,6 +20,7 @@ function FPP.AdminMenu(Panel)
 	AdminPanel.contents:Clear()
 
 	local superadmin = LocalPlayer():IsSuperAdmin()
+	local admin = LocalPlayer():IsAdmin()
 	if not superadmin then
 		AdminPanel.contents:Add(Label("You are not a superadmin\nThe changes you make will not have any effect."))
 		local AmAdmin = AdminPanel.contents:Add("DButton")
@@ -153,13 +154,12 @@ function FPP.AdminMenu(Panel)
 	addchk("Cleanup disconnected players's entities", {"FPP_GLOBALSETTINGS1", "cleanupdisconnected"}, general)
 	addchk("Cleanup admin's entities on disconnect", {"FPP_GLOBALSETTINGS1", "cleanupadmin"}, general)
 	addsldr(300, {"FPP_GLOBALSETTINGS1", "cleanupdisconnectedtime"}, "Deletion time", general, 0)
-	addchk("Anti speedhack(requires changelevel)", {"FPP_GLOBALSETTINGS1", "antispeedhack"}, general)
 	addchk("Anti E2 mingery (mass killing with E2)", {"FPP_GLOBALSETTINGS1", "antie2minge"}, general)
 
 	local delnow = general:Add("DButton")
 	delnow:SetText("Delete disconnected players' entities")
 	delnow:SetConsoleCommand("FPP_cleanup", "disconnected")
-	delnow:SetDisabled(not superadmin)
+	delnow:SetDisabled(not admin)
 
 	local other = general:Add(Label("\nDelete player's entities:"))
 	other:SizeToContents()
@@ -171,7 +171,7 @@ function FPP.AdminMenu(Panel)
 		local rm = general:Add("DButton")
 		rm:SetText(v:Nick())
 		rm:SetConsoleCommand("FPP_Cleanup", v:UserID())
-		rm:SetDisabled(not LocalPlayer():IsAdmin() and not superadmin)
+		rm:SetDisabled(not admin)
 	end
 	if not areplayers then
 		local nope = general:Add(Label("<No players available>"))
@@ -249,7 +249,7 @@ function FPP.AdminMenu(Panel)
 	damage:Add(antiDMGLabel)
 
 	addchk("Damage protection enabled", {"FPP_ENTITYDAMAGE1", "toggle"}, damage)
-	addchk("Prop damage protection", {"FPP_ENTITYDAMAGE1", "protectpropdamage"}, damage)
+	addchk("Protect against damage by props", {"FPP_ENTITYDAMAGE1", "protectpropdamage"}, damage)
 	addchk("Admins can damage all entities", {"FPP_ENTITYDAMAGE1", "adminall"}, damage)
 	addchk("People can damage world entities", {"FPP_ENTITYDAMAGE1", "worldprops"}, damage)
 	addchk("Admins can damage world entities", {"FPP_ENTITYDAMAGE1", "adminworldprops"}, damage)
@@ -1013,6 +1013,7 @@ function FPP.SetBuddyMenu(SteamID, Name, data)
 			tonum[true] = 1
 
 			FPP.SaveBuddy(SteamID, Name, Type, tonum[box.Button:GetChecked()])
+			FPP.BuddiesMenu(BuddiesPanel) -- Restart the entire menu
 		end
 		box:SizeToContents()
 	end

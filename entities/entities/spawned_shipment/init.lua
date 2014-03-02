@@ -4,15 +4,16 @@ AddCSLuaFile("shared.lua")
 include("shared.lua")
 include("commands.lua")
 
+util.AddNetworkString("DarkRP_shipmentSpawn")
+
 function ENT:Initialize()
 	self.Destructed = false
 	self:SetModel("models/Items/item_item_crate.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
-	self.locked = true
-	timer.Simple(0, function() self.locked = true end) -- when spawning through pocket it might be unlocked
-	timer.Simple(GAMEMODE.Config.shipmentspawntime, function() if IsValid(self) then self.locked = false end end)
+
+	self:StartSpawning()
 	self.damage = 100
 	self.ShareGravgun = true
 	local phys = self:GetPhysicsObject()
@@ -32,6 +33,18 @@ function ENT:Initialize()
 
 	phys = self:GetgunModel():GetPhysicsObject()
 	phys:EnableMotion(false)
+end
+
+function ENT:StartSpawning()
+	self.locked = true
+	timer.Simple(0, function()
+		net.Start("DarkRP_shipmentSpawn")
+			net.WriteEntity(self)
+		net.Broadcast()
+	end)
+
+	timer.Simple(0, function() self.locked = true end) -- when spawning through pocket it might be unlocked
+	timer.Simple(GAMEMODE.Config.shipmentspawntime, function() if IsValid(self) then self.locked = false end end)
 end
 
 function ENT:OnTakeDamage(dmg)
@@ -91,7 +104,7 @@ function ENT:SpawnItem()
 		return
 	end
 
-	weapon.weaponclass = class
+	weapon:SetWeaponClass(class)
 	weapon:SetModel(model)
 	weapon.ammoadd = self.ammoadd or (weapons.Get(class) and weapons.Get(class).Primary.DefaultClip)
 	weapon.clip1 = self.clip1
@@ -137,7 +150,7 @@ function ENT:Destruct()
 
 	local weapon = ents.Create("spawned_weapon")
 	weapon:SetModel(model)
-	weapon.weaponclass = class
+	weapon:SetWeaponClass(class)
 	weapon.ShareGravgun = true
 	weapon:SetPos(Vector(vPoint.x, vPoint.y, vPoint.z + 5))
 	weapon.ammoadd = self.ammoadd or (weapons.Get(class) and weapons.Get(class).Primary.DefaultClip)
@@ -149,12 +162,16 @@ function ENT:Destruct()
 end
 
 function ENT:Touch(ent)
+	-- the .USED var is also used in other mods for the same purpose
 	if ent:GetClass() ~= "spawned_shipment" or
 		self:Getcontents() ~= ent:Getcontents() or
 		self.locked or ent.locked or
+		self.USED or ent.USED or
 		self.hasMerged or ent.hasMerged then return end
 
+	-- Both hasMerged and USED are used by third party mods. Keep both in.
 	ent.hasMerged = true
+	ent.USED = true
 
 	local selfCount, entCount = self:Getcount(), ent:Getcount()
 	local count = selfCount + entCount

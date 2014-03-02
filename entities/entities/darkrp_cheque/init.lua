@@ -27,7 +27,7 @@ function ENT:Use(activator, caller)
 
 	if (IsValid(activator) and IsValid(recipient)) and activator == recipient then
 		owner = (IsValid(owner) and owner:Nick()) or DarkRP.getPhrase("disconnected_player")
-		DarkRP.notify(activator, 0, 4, DarkRP.getPhrase("found_cheque", GAMEMODE.Config.currency, amount, owner))
+		DarkRP.notify(activator, 0, 4, DarkRP.getPhrase("found_cheque", DarkRP.formatMoney(amount), "", owner))
 		activator:addMoney(amount)
 		self:Remove()
 	elseif (IsValid(owner) and IsValid(recipient)) and owner ~= activator then
@@ -41,10 +41,13 @@ function ENT:Use(activator, caller)
 end
 
 function ENT:Touch(ent)
-	if ent:GetClass() ~= "darkrp_cheque" or self.hasMerged or ent.hasMerged then return end
+	-- the .USED var is also used in other mods for the same purpose
+	if ent:GetClass() ~= "darkrp_cheque" or self.USED or ent.USED or self.hasMerged or ent.hasMerged then return end
 	if ent.dt.owning_ent ~= self.dt.owning_ent then return end
 	if ent.dt.recipient ~= self.dt.recipient then return end
 
+	-- Both hasMerged and USED are used by third party mods. Keep both in.
+	ent.USED = true
 	ent.hasMerged = true
 
 	ent:Remove()

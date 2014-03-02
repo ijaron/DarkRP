@@ -7,18 +7,36 @@ local HUDHeight
 
 local Color = Color
 local cvars = cvars
+local DarkRP = DarkRP
+local CurTime = CurTime
 local draw = draw
 local GetConVar = GetConVar
+local IsValid = IsValid
 local Lerp = Lerp
 local localplayer
+local math = math
 local pairs = pairs
+local ScrW, ScrH = ScrW, ScrH
 local SortedPairs = SortedPairs
 local string = string
 local surface = surface
 local table = table
+local timer = timer
 local tostring = tostring
 
 CreateClientConVar("weaponhud", 0, true, false)
+
+local colors = {}
+colors.black = Color(0, 0, 0, 255)
+colors.blue = Color(0, 0, 255, 255)
+colors.brightred = Color(200, 30, 30, 255)
+colors.darkred = Color(0, 0, 70, 100)
+colors.darkblack = Color(0, 0, 0, 200)
+colors.gray1 = Color(0, 0, 0, 155)
+colors.gray2 = Color(51, 58, 51,100)
+colors.red = Color(255, 0, 0, 255)
+colors.white = Color(255, 255, 255, 255)
+colors.white1 = Color(255, 255, 255, 200)
 
 local function ReloadConVars()
 	ConVars = {
@@ -56,19 +74,6 @@ local function ReloadConVars()
 end
 ReloadConVars()
 
-local function formatNumber(n)
-	if not n then return "" end
-	if n >= 1e14 then return tostring(n) end
-    n = tostring(n)
-    local sep = sep or ","
-    local dp = string.find(n, "%.") or #n+1
-	for i=dp-4, 1, -3 do
-		n = n:sub(1, i) .. sep .. n:sub(i+1)
-    end
-    return n
-end
-
-
 local Scrw, Scrh, RelativeX, RelativeY
 /*---------------------------------------------------------------------------
 HUD Seperate Elements
@@ -82,39 +87,38 @@ local function DrawHealth()
 	draw.RoundedBox(Border, RelativeX + 4, RelativeY - 30, HUDWidth - 8, 20, ConVars.Healthbackground)
 	draw.RoundedBox(Border, RelativeX + 5, RelativeY - 29, (HUDWidth - 9) * DrawHealth, 18, ConVars.Healthforeground)
 
-	draw.DrawText(math.Max(0, math.Round(localplayer:Health())), "DarkRPHUD2", RelativeX + 4 + (HUDWidth - 8)/2, RelativeY - 32, ConVars.HealthText, 1)
+	draw.DrawNonParsedText(math.Max(0, math.Round(localplayer:Health())), "DarkRPHUD2", RelativeX + 4 + (HUDWidth - 8)/2, RelativeY - 32, ConVars.HealthText, 1)
 
 	-- Armor
 	local armor = localplayer:Armor()
 	if armor ~= 0 then
-		draw.RoundedBox(2, RelativeX + 4, RelativeY - 15, (HUDWidth - 8) * armor / 100, 5, Color(0, 0, 255, 255))
+		draw.RoundedBox(2, RelativeX + 4, RelativeY - 15, (HUDWidth - 8) * armor / 100, 5, colors.blue)
 	end
 end
 
 local function DrawInfo()
-	local Salary = DarkRP.getPhrase("salary", GAMEMODE.Config.currency, (localplayer:getDarkRPVar("salary") or 0))
+	local Salary = DarkRP.getPhrase("salary", DarkRP.formatMoney(localplayer:getDarkRPVar("salary")), "")
 
-	local JobWallet = {
-		DarkRP.getPhrase("job", localplayer:getDarkRPVar("job") or ""), "\n",
-		DarkRP.getPhrase("wallet", GAMEMODE.Config.currency, formatNumber(localplayer:getDarkRPVar("money") or 0))
-	}
-	JobWallet = table.concat(JobWallet)
+	JobWallet = string.format("%s\n%s",
+		DarkRP.getPhrase("job", localplayer:getDarkRPVar("job") or ""),
+		DarkRP.getPhrase("wallet", DarkRP.formatMoney(localplayer:getDarkRPVar("money")), "")
+	)
 
 	local wep = localplayer:GetActiveWeapon()
 
 	if IsValid(wep) and GAMEMODE.Config.weaponhud then
         local name = wep:GetPrintName();
-		draw.DrawText(DarkRP.getPhrase("weapon", name), "UiBold", RelativeX + 5, RelativeY - HUDHeight - 18, Color(255, 255, 255, 255), 0)
+		draw.DrawNonParsedText(DarkRP.getPhrase("weapon", name), "UiBold", RelativeX + 5, RelativeY - HUDHeight - 18, colors.white, 0)
 	end
 
-	draw.DrawText(Salary, "DarkRPHUD2", RelativeX + 5, RelativeY - HUDHeight + 6, ConVars.salary1, 0)
-	draw.DrawText(Salary, "DarkRPHUD2", RelativeX + 4, RelativeY - HUDHeight + 5, ConVars.salary2, 0)
+	draw.DrawNonParsedText(Salary, "DarkRPHUD2", RelativeX + 5, RelativeY - HUDHeight + 6, ConVars.salary1, 0)
+	draw.DrawNonParsedText(Salary, "DarkRPHUD2", RelativeX + 4, RelativeY - HUDHeight + 5, ConVars.salary2, 0)
 
 	surface.SetFont("DarkRPHUD2")
 	local w, h = surface.GetTextSize(Salary)
 
-	draw.DrawText(JobWallet, "DarkRPHUD2", RelativeX + 5, RelativeY - HUDHeight + h + 6, ConVars.Job1, 0)
-	draw.DrawText(JobWallet, "DarkRPHUD2", RelativeX + 4, RelativeY - HUDHeight + h + 5, ConVars.Job2, 0)
+	draw.DrawNonParsedText(JobWallet, "DarkRPHUD2", RelativeX + 5, RelativeY - HUDHeight + h + 6, ConVars.Job1, 0)
+	draw.DrawNonParsedText(JobWallet, "DarkRPHUD2", RelativeX + 4, RelativeY - HUDHeight + h + 5, ConVars.Job2, 0)
 end
 
 local Page = Material("icon16/page_white_text.png")
@@ -134,17 +138,17 @@ local function Agenda()
 	local agenda = ply:getAgendaTable()
 	if not agenda then return end
 
-	draw.RoundedBox(10, 10, 10, 460, 110, Color(0, 0, 0, 155))
-	draw.RoundedBox(10, 12, 12, 456, 106, Color(51, 58, 51,100))
-	draw.RoundedBox(10, 12, 12, 456, 20, Color(0, 0, 70, 100))
+	draw.RoundedBox(10, 10, 10, 460, 110, colors.gray1)
+	draw.RoundedBox(10, 12, 12, 456, 106, colors.gray2)
+	draw.RoundedBox(10, 12, 12, 456, 20, colors.darkred)
 
-	draw.DrawText(agenda.Title, "DarkRPHUD1", 30, 12, Color(255,0,0,255),0)
+	draw.DrawNonParsedText(agenda.Title, "DarkRPHUD1", 30, 12, colors.red, 0)
 
 	local text = ply:getDarkRPVar("agenda") or ""
 
 	text = text:gsub("//", "\n"):gsub("\\n", "\n")
 	text = DarkRP.textWrap(text, "DarkRPHUD1", 440)
-	draw.DrawText(text, "DarkRPHUD1", 30, 35, Color(255,255,255,255),0)
+	draw.DrawNonParsedText(text, "DarkRPHUD1", 30, 35, colors.white, 0)
 end
 
 local VoiceChatTexture = surface.GetTextureID("voice/icntlk_pl")
@@ -170,7 +174,7 @@ local function LockDown()
 	if util.tobool(GetConVarNumber("DarkRP_LockDown")) then
 		local cin = (math.sin(CurTime()) + 1) / 2
 		local chatBoxSize = math.floor(ScrH() / 4)
-		draw.DrawText(DarkRP.getPhrase("lockdown_started"), "ScoreboardSubtitle", chbxX, chboxY + chatBoxSize, Color(cin * 255, 0, 255 - (cin * 255), 255), TEXT_ALIGN_LEFT)
+		draw.DrawNonParsedText(DarkRP.getPhrase("lockdown_started"), "ScoreboardSubtitle", chbxX, chboxY + chatBoxSize, Color(cin * 255, 0, 255 - (cin * 255), 255), TEXT_ALIGN_LEFT)
 	end
 end
 
@@ -182,7 +186,7 @@ usermessage.Hook("GotArrested", function(msg)
 
 	Arrested = function()
 		if CurTime() - StartArrested <= ArrestedUntil and localplayer:getDarkRPVar("Arrested") then
-		draw.DrawText(DarkRP.getPhrase("youre_arrested", math.ceil(ArrestedUntil - (CurTime() - StartArrested))), "DarkRPHUD1", ScrW()/2, ScrH() - ScrH()/12, Color(255,255,255,255), 1)
+		draw.DrawNonParsedText(DarkRP.getPhrase("youre_arrested", math.ceil(ArrestedUntil - (CurTime() - StartArrested))), "DarkRPHUD1", ScrW()/2, ScrH() - ScrH()/12, colors.white, 1)
 		elseif not localplayer:getDarkRPVar("Arrested") then
 			Arrested = function() end
 		end
@@ -196,9 +200,9 @@ usermessage.Hook("AdminTell", function(msg)
 	local Message = msg:ReadString()
 
 	AdminTell = function()
-		draw.RoundedBox(4, 10, 10, ScrW() - 20, 100, Color(0, 0, 0, 200))
-		draw.DrawText(DarkRP.getPhrase("listen_up"), "GModToolName", ScrW() / 2 + 10, 10, Color(255, 255, 255, 255), 1)
-		draw.DrawText(Message, "ChatFont", ScrW() / 2 + 10, 80, Color(200, 30, 30, 255), 1)
+		draw.RoundedBox(4, 10, 10, ScrW() - 20, 100, colors.darkblack)
+		draw.DrawNonParsedText(DarkRP.getPhrase("listen_up"), "GModToolName", ScrW() / 2 + 10, 10, colors.white, 1)
+		draw.DrawNonParsedText(Message, "ChatFont", ScrW() / 2 + 10, 80, colors.brightred, 1)
 	end
 
 	timer.Create("DarkRP_AdminTell", 10, 1, function()
@@ -247,16 +251,19 @@ local function DrawPlayerInfo(ply)
 	pos.y = pos.y - 50 -- Move the text up a few pixels to compensate for the height of the text
 
 	if GAMEMODE.Config.showname and not ply:getDarkRPVar("wanted") then
-		draw.DrawText(ply:Nick(), "DarkRPHUD2", pos.x + 1, pos.y + 1, Color(0, 0, 0, 255), 1)
-		draw.DrawText(ply:Nick(), "DarkRPHUD2", pos.x, pos.y, team.GetColor(ply:Team()), 1)
-		draw.DrawText(DarkRP.getPhrase("health", ply:Health()), "DarkRPHUD2", pos.x + 1, pos.y + 21, Color(0, 0, 0, 255), 1)
-		draw.DrawText(DarkRP.getPhrase("health", ply:Health()), "DarkRPHUD2", pos.x, pos.y + 20, Color(255,255,255,200), 1)
+		draw.DrawNonParsedText(ply:Nick(), "DarkRPHUD2", pos.x + 1, pos.y + 1, colors.black, 1)
+		draw.DrawNonParsedText(ply:Nick(), "DarkRPHUD2", pos.x, pos.y, team.GetColor(ply:Team()), 1)
+	end
+
+	if GAMEMODE.Config.showhealth and not ply:getDarkRPVar("wanted") then
+		draw.DrawNonParsedText(DarkRP.getPhrase("health", ply:Health()), "DarkRPHUD2", pos.x + 1, pos.y + 21, colors.black, 1)
+		draw.DrawNonParsedText(DarkRP.getPhrase("health", ply:Health()), "DarkRPHUD2", pos.x, pos.y + 20, colors.white1, 1)
 	end
 
 	if GAMEMODE.Config.showjob then
 		local teamname = team.GetName(ply:Team())
-		draw.DrawText(ply:getDarkRPVar("job") or teamname, "DarkRPHUD2", pos.x + 1, pos.y + 41, Color(0, 0, 0, 255), 1)
-		draw.DrawText(ply:getDarkRPVar("job") or teamname, "DarkRPHUD2", pos.x, pos.y + 40, Color(255, 255, 255, 200), 1)
+		draw.DrawNonParsedText(ply:getDarkRPVar("job") or teamname, "DarkRPHUD2", pos.x + 1, pos.y + 41, colors.black, 1)
+		draw.DrawNonParsedText(ply:getDarkRPVar("job") or teamname, "DarkRPHUD2", pos.x, pos.y + 40, colors.white1, 1)
 	end
 
 	if ply:getDarkRPVar("HasGunlicense") then
@@ -276,14 +283,14 @@ local function DrawWantedInfo(ply)
 	pos = pos:ToScreen()
 
 	if GAMEMODE.Config.showname then
-		draw.DrawText(ply:Nick(), "DarkRPHUD2", pos.x + 1, pos.y + 1, Color(0, 0, 0, 255), 1)
-		draw.DrawText(ply:Nick(), "DarkRPHUD2", pos.x, pos.y, team.GetColor(ply:Team()), 1)
+		draw.DrawNonParsedText(ply:Nick(), "DarkRPHUD2", pos.x + 1, pos.y + 1, colors.black, 1)
+		draw.DrawNonParsedText(ply:Nick(), "DarkRPHUD2", pos.x, pos.y, team.GetColor(ply:Team()), 1)
 	end
 
 	local wantedText = DarkRP.getPhrase("wanted", tostring(ply:getDarkRPVar("wantedReason")))
 
-	draw.DrawText(wantedText, "DarkRPHUD2", pos.x, pos.y - 40, Color(255, 255, 255, 200), 1)
-	draw.DrawText(wantedText, "DarkRPHUD2", pos.x + 1, pos.y - 41, Color(255, 0, 0, 255), 1)
+	draw.DrawNonParsedText(wantedText, "DarkRPHUD2", pos.x, pos.y - 40, colors.white1, 1)
+	draw.DrawNonParsedText(wantedText, "DarkRPHUD2", pos.x + 1, pos.y - 41, colors.red, 1)
 end
 
 /*---------------------------------------------------------------------------

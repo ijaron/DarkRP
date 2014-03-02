@@ -60,14 +60,14 @@ function meta:isKeysOwnedBy(ply)
 	if self:isMasterOwner(ply) then return true end
 
 	local coOwners = self:getKeysCoOwners()
-	return coOwners and coOwners[ply:EntIndex()] or false
+	return coOwners and coOwners[ply:UserID()] or false
 end
 
 function meta:isKeysAllowedToOwn(ply)
 	local doorData = self:getDoorData()
 	if not doorData then return false end
 
-	return doorData.allowedToOwn and doorData.allowedToOwn[ply:EntIndex()] or false
+	return doorData.allowedToOwn and doorData.allowedToOwn[ply:UserID()] or false
 end
 
 function meta:getKeysNonOwnable()
@@ -112,6 +112,29 @@ function meta:getKeysCoOwners()
 	return doorData.extraOwners
 end
 
+local function canLockUnlock(ply, ent)
+	local Team = ply:Team()
+	local group = ent:getKeysDoorGroup()
+	local teamOwn = ent:getKeysDoorTeams()
+
+	return ent:isKeysOwnedBy(ply) 										  or
+		(group   and table.HasValue(RPExtraTeamDoors[group] or {}, Team)) or
+		(teamOwn and teamOwn[Team])
+end
+
+function plyMeta:canKeysLock(ent)
+	local canLock = hook.Run("canKeysLock", self, ent)
+
+	if canLock ~= nil then return canLock end
+	return canLockUnlock(self, ent)
+end
+
+function plyMeta:canKeysUnlock(ent)
+	local canUnlock = hook.Run("canKeysUnlock", self, ent)
+
+	if canUnlock ~= nil then return canUnlock end
+	return canLockUnlock(self, ent)
+end
 
 /*---------------------------------------------------------------------------
 Commands

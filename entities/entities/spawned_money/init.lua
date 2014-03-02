@@ -17,18 +17,21 @@ function ENT:Initialize()
 	phys:Wake()
 end
 
-
 function ENT:Use(activator,caller)
+	if self.USED or self.hasMerged then return end
 	local amount = self:Getamount()
 
 	activator:addMoney(amount or 0)
-	DarkRP.notify(activator, 0, 4, DarkRP.getPhrase("found_cash", GAMEMODE.Config.currency, (self:Getamount() or 0)))
+	DarkRP.notify(activator, 0, 4, DarkRP.getPhrase("found_money", DarkRP.formatMoney(self:Getamount())))
 	self:Remove()
 end
 
 function ENT:Touch(ent)
-	if ent:GetClass() ~= "spawned_money" or self.hasMerged or ent.hasMerged then return end
+	-- the .USED var is also used in other mods for the same purpose
+	if ent:GetClass() ~= "spawned_money" or self.USED or ent.USED or self.hasMerged or ent.hasMerged then return end
 
+	-- Both hasMerged and USED are used by third party mods. Keep both in.
+	ent.USED = true
 	ent.hasMerged = true
 
 	ent:Remove()
