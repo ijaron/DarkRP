@@ -168,9 +168,9 @@ local function BuyShipment(ply, args)
 			end
 		end
 
-		found = v
-		foundKey = k
-		break
+//		found = v
+//		foundKey = k
+//		break
 	end
 
 	if not found then
