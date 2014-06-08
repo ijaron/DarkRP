@@ -64,7 +64,8 @@ end
 
 function plyMeta:unWanted(actor)
 	hook.Call("playerUnWanted", GAMEMODE, self, actor)
-	self:setDarkRPVar("wanted", false)
+	self:setDarkRPVar("wanted", nil)
+	self:setDarkRPVar("wantedReason", nil)
 
 	local expiredMessage = IsValid(actor) and DarkRP.getPhrase("wanted_revoked", self:Nick(), actor:Nick() or "") or
 		DarkRP.getPhrase("wanted_expired", self:Nick())
@@ -92,7 +93,7 @@ end
 function plyMeta:unArrest(unarrester)
 	if not self:isArrested() then return end
 
-	self:setDarkRPVar("Arrested", false)
+	self:setDarkRPVar("Arrested", nil)
 	arrestedPlayers[self:SteamID()] = nil
 	hook.Call("playerUnArrested", DarkRP.hooks, self, unarrester)
 end
@@ -215,8 +216,19 @@ local function ccArrest(ply, cmd, args)
 		return
 	end
 
-	local target = DarkRP.findPlayer(args[1])
-	if target then
+	local targets = DarkRP.findPlayers(args[1])
+
+	if not targets then
+		if ply:EntIndex() == 0 then
+			print(DarkRP.getPhrase("could_not_find", tostring(args[1])))
+		else
+			ply:PrintMessage(2, DarkRP.getPhrase("could_not_find", tostring(args[1])))
+		end
+
+		return
+	end
+
+	for k, target in pairs(targets) do
 		local length = tonumber(args[2])
 		if length then
 			target:arrest(length, ply)
@@ -228,12 +240,6 @@ local function ccArrest(ply, cmd, args)
 			DarkRP.log("Console force-arrested "..target:SteamName(), Color(0, 255, 255))
 		else
 			DarkRP.log(ply:Nick().." ("..ply:SteamID()..") force-arrested "..target:SteamName(), Color(0, 255, 255))
-		end
-	else
-		if ply:EntIndex() == 0 then
-			print(DarkRP.getPhrase("could_not_find", tostring(args[1])))
-		else
-			ply:PrintMessage(2, DarkRP.getPhrase("could_not_find", tostring(args[1])))
 		end
 	end
 end
@@ -254,9 +260,19 @@ local function ccUnarrest(ply, cmd, args)
 		return
 	end
 
-	local target = DarkRP.findPlayer(args[1])
+	local targets = DarkRP.findPlayers(args[1])
 
-	if target then
+	if not targets then
+		if ply:EntIndex() == 0 then
+			print(DarkRP.getPhrase("could_not_find", tostring(args[1])))
+		else
+			ply:PrintMessage(2, DarkRP.getPhrase("could_not_find", tostring(args[1])))
+		end
+
+		return
+	end
+
+	for _, target in pairs(targets) do
 		target:unArrest(ply)
 		if not target:Alive() then target:Spawn() end
 
@@ -264,12 +280,6 @@ local function ccUnarrest(ply, cmd, args)
 			DarkRP.log("Console force-unarrested "..target:SteamName(), Color(0, 255, 255))
 		else
 			DarkRP.log(ply:Nick().." ("..ply:SteamID()..") force-unarrested "..target:SteamName(), Color(0, 255, 255))
-		end
-	else
-		if ply:EntIndex() == 0 then
-			print(DarkRP.getPhrase("could_not_find", tostring(args[1])))
-		else
-			ply:PrintMessage(2, DarkRP.getPhrase("could_not_find", tostring(args[1])))
 		end
 	end
 end
@@ -293,7 +303,7 @@ Hooks
 function DarkRP.hooks:playerArrested(ply, time, arrester)
 	if ply:isWanted() then ply:unWanted(arrester) end
 	ply:unWarrant(arrester)
-	ply:setDarkRPVar("HasGunlicense", false)
+	ply:setDarkRPVar("HasGunlicense", nil)
 
 	-- UpdatePlayerSpeed won't work here as the "Arrested" DarkRPVar is set AFTER this hook
 	GAMEMODE:SetPlayerSpeed(ply, GAMEMODE.Config.arrestspeed, GAMEMODE.Config.arrestspeed)
@@ -324,15 +334,13 @@ function DarkRP.hooks:playerUnArrested(ply, actor)
 
 	-- "Arrested" DarkRPVar is set to false BEFORE this hook however, so it is safe here.
 	hook.Call("UpdatePlayerSpeed", GAMEMODE, ply)
-	GAMEMODE:PlayerLoadout(ply)
-	if GAMEMODE.Config.telefromjail and (not FAdmin or not ply:FAdmin_GetGlobal("fadmin_jailed")) then
-		local _, pos = GAMEMODE:PlayerSelectSpawn(ply)
-		timer.Simple(0, function() if IsValid(ply) then ply:SetPos(pos) end end) -- workaround for SetPos in weapon event bug
-	elseif FAdmin and ply:FAdmin_GetGlobal("fadmin_jailed") then
-		timer.Simple(0, function() if IsValid(ply) then ply:SetPos(ply.FAdminJailPos) end end)
+	gamemode.Call("PlayerLoadout", ply)
+	if GAMEMODE.Config.telefromjail then
+		local ent, pos = GAMEMODE:PlayerSelectSpawn(ply)
+		timer.Simple(0, function() if IsValid(ply) then ply:SetPos(pos or ent:GetPos()) end end) -- workaround for SetPos in weapon event bug
 	end
 
-	timer.Destroy(ply:SteamID() .. "jailtimer")
+	timer.Destroy(ply:UniqueID() .. "jailtimer")
 	DarkRP.notifyAll(0, 4, DarkRP.getPhrase("hes_unarrested", ply:Name()))
 end
 

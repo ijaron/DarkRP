@@ -209,7 +209,7 @@ end
 
 function DarkRP.storeMoney(ply, amount)
 	if not IsValid(ply) then return end
-	if amount < 0  then return end
+	if not isnumber(amount) or amount < 0 or amount >= 1/0 then return end
 
 	MySQLite.query([[UPDATE darkrp_player SET wallet = ]] .. amount .. [[ WHERE uid = ]] .. ply:UniqueID())
 end
@@ -272,7 +272,7 @@ function meta:restorePlayerData()
 		info.salary = info.salary or GAMEMODE.Config.normalsalary
 
 		self:setDarkRPVar("money", tonumber(info.wallet))
-		self:setDarkRPVar("salary", tonumber(info.salary))
+		self:setSelfDarkRPVar("salary", tonumber(info.salary))
 
 		self:setDarkRPVar("rpname", info.rpname)
 
@@ -283,8 +283,8 @@ function meta:restorePlayerData()
 		self.DarkRPUnInitialized = nil
 
 		self:setDarkRPVar("money", GAMEMODE.Config.startingmoney)
-		self:setDarkRPVar("salary", GAMEMODE.Config.normalsalary)
-		self:setDarkRPVar("name", string.gsub(self:SteamName(), "\\\"", "\""))
+		self:setSelfDarkRPVar("salary", GAMEMODE.Config.normalsalary)
+		self:setDarkRPVar("rpname", string.gsub(self:SteamName(), "\\\"", "\""))
 
 		error("Failed to retrieve player information from MySQL server")
 	end)
@@ -313,16 +313,32 @@ function setUpNonOwnableDoors()
 
 		for _, row in pairs(r) do
 			local e = DarkRP.doorIndexToEnt(tonumber(row.idx))
+
 			if IsValid(e) and e:isKeysOwnable() then
 				e:setKeysNonOwnable(tobool(row.isDisabled))
-				if r.isLocked ~= nil then
-					e:Fire((tobool(row.locked) and "" or "un").."lock", "", 0)
+				if row.isLocked ~= nil then
+					e:Fire((tobool(row.isLocked) and "" or "un").."lock", "", 0)
 				end
 				e:setKeysTitle(row.title ~= "NULL" and row.title or nil)
 			end
 		end
 	end)
 end
+
+local keyValueActions = {
+	["DarkRPNonOwnable"] = function(ent, val) ent:setKeysNonOwnable(tobool(val)) end,
+	["DarkRPTitle"]      = function(ent, val) ent:setKeysTitle(val) end,
+	["DarkRPDoorGroup"]  = function(ent, val) if RPExtraTeamDoors[val] then ent:setDoorGroup(val) end end
+}
+
+local function onKeyValue(ent, key, value)
+	if not ent:isDoor() then return end
+
+	if keyValueActions[key] then
+		keyValueActions[key](ent, value)
+	end
+end
+hook.Add("EntityKeyValue", "darkrp_doors", onKeyValue)
 
 function DarkRP.storeTeamDoorOwnability(ent)
 	if not ent:CreatedByMap() then return end

@@ -17,10 +17,10 @@ function FAdmin.Log(text, preventServerLog)
 	if not tobool(GetConVarNumber("FAdmin_logging")) then return end
 	if not preventServerLog then ServerLog(text .. "\n") end
 	if not LogFile then -- The log file of this session, if it's not there then make it!
-		if not file.IsDir("FAdmin_logs", "DATA") then
-			file.CreateDir("FAdmin_logs")
+		if not file.IsDir("fadmin_logs", "DATA") then
+			file.CreateDir("fadmin_logs")
 		end
-		LogFile = "FAdmin_logs/"..os.date("%m_%d_%Y %I_%M %p")..".txt"
+		LogFile = "fadmin_logs/"..os.date("%m_%d_%Y %I_%M %p")..".txt"
 		file.Write(LogFile, os.date().. "\t".. text)
 		return
 	end
@@ -31,38 +31,38 @@ hook.Add("PlayerGiveSWEP", "FAdmin_Log", function(ply, class)
 	if not IsValid(ply) or not ply:IsPlayer() then return end
 	FAdmin.Log(ply:Nick().." ("..ply:SteamID()..") Gave himself a "..(class or "Unknown"))
 end)
-hook.Add("PlayerSpawnSENT", "FAdmin_Log", function(ply, class)
-	if not IsValid(ply) or not ply:IsPlayer() then return end
-	FAdmin.Log(ply:Nick().." ("..ply:SteamID()..") Spawned a "..(class or "Unknown"))
+hook.Add("PlayerSpawnedSENT", "FAdmin_Log", function(ply, ent)
+	if not IsValid(ply) or not ply:IsPlayer() or not IsValid(ent) then return end
+	FAdmin.Log(ply:Nick().." ("..ply:SteamID()..") Spawned a "..(ent:GetClass() or "Unknown"))
 end)
 hook.Add("PlayerSpawnSWEP", "FAdmin_Log", function(ply, class)
 	if not IsValid(ply) or not ply:IsPlayer() then return end
 	FAdmin.Log(ply:Nick().." ("..ply:SteamID()..") Spawned a "..(class or "Unknown"))
 end)
-hook.Add("PlayerSpawnProp", "FAdmin_Log", function(ply, class)
-	if not IsValid(ply) or not ply:IsPlayer() then return end
+hook.Add("PlayerSpawnedProp", "FAdmin_Log", function(ply, model, ent)
+	if not IsValid(ply) or not ply:IsPlayer() or not IsValid(ent) then return end
 	for k,v in pairs(player.GetAll()) do
 		if v:IsAdmin() then
-			v:PrintMessage(HUD_PRINTCONSOLE, ply:Nick().." ("..ply:SteamID()..") Spawned a "..(class or "Unknown"))
+			v:PrintMessage(HUD_PRINTCONSOLE, ply:Nick().." ("..ply:SteamID()..") Spawned a "..(model or "Unknown"))
 		end
 	end
-	FAdmin.Log(ply:Nick().." ("..ply:SteamID()..") Spawned a "..(class or "Unknown"))
+	FAdmin.Log(ply:Nick().." ("..ply:SteamID()..") Spawned a "..(model or "Unknown"))
 end)
-hook.Add("PlayerSpawnNPC", "FAdmin_Log", function(ply, class)
-	if not IsValid(ply) or not ply:IsPlayer() then return end
-	FAdmin.Log(ply:Nick().." ("..ply:SteamID()..") Spawned a "..(class or "Unknown"))
+hook.Add("PlayerSpawnedNPC", "FAdmin_Log", function(ply, ent)
+	if not IsValid(ply) or not ply:IsPlayer() or not IsValid(ent) then return end
+	FAdmin.Log(ply:Nick().." ("..ply:SteamID()..") Spawned a "..(ent or "Unknown"))
 end)
-hook.Add("PlayerSpawnVehicle", "FAdmin_Log", function(ply, class)
-	if not IsValid(ply) or not ply:IsPlayer() then return end
-	FAdmin.Log(ply:Nick().." ("..ply:SteamID()..") Spawned a "..(class or "Unknown"))
+hook.Add("PlayerSpawnedVehicle", "FAdmin_Log", function(ply, ent)
+	if not IsValid(ply) or not ply:IsPlayer() or not IsValid(ent) then return end
+	FAdmin.Log(ply:Nick().." ("..ply:SteamID()..") Spawned a "..(ent:GetClass() or "Unknown"))
 end)
-hook.Add("PlayerSpawnEffect", "FAdmin_Log", function(ply, class)
-	if not IsValid(ply) or not ply:IsPlayer() then return end
-	FAdmin.Log(ply:Nick().." ("..ply:SteamID()..") Spawned a "..(class or "Unknown"))
+hook.Add("PlayerSpawnedEffect", "FAdmin_Log", function(ply, model, ent)
+	if not IsValid(ply) or not ply:IsPlayer() or not model then return end
+	FAdmin.Log(ply:Nick().." ("..ply:SteamID()..") Spawned a "..(model or "Unknown"))
 end)
-hook.Add("PlayerSpawnRagdoll", "FAdmin_Log", function(ply, class)
-	if not IsValid(ply) or not ply:IsPlayer() then return end
-	FAdmin.Log(ply:Nick().." ("..ply:SteamID()..") Spawned a "..(class or "Unknown"))
+hook.Add("PlayerSpawnedRagdoll", "FAdmin_Log", function(ply, model, ent)
+	if not IsValid(ply) or not ply:IsPlayer() or not IsValid(ent) then return end
+	FAdmin.Log(ply:Nick().." ("..ply:SteamID()..") Spawned a "..(model or "Unknown"))
 end)
 hook.Add("CanTool", "FAdmin_Log", function(ply, tr, toolclass)
 	if not IsValid(ply) or not ply:IsPlayer() then return end

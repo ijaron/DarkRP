@@ -89,6 +89,7 @@ local function Ragdoll(ply, cmd, args)
 		if not FAdmin.Access.PlayerHasPrivilege(ply, "Ragdoll", target) then FAdmin.Messages.SendMessage(ply, 5, "No access!") return end
 		if IsValid(target) then
 			if RagdollType == "unragdoll" or string.lower(cmd) == "unragdoll" and target:FAdmin_GetGlobal("fadmin_ragdolled") then
+				timer.Destroy(target:SteamID() .. "FAdminRagdoll")
 				target:FAdmin_SetGlobal("fadmin_ragdolled", false)
 				target:UnSpectate()
 				target:Spawn()
@@ -173,7 +174,7 @@ local function Ragdoll(ply, cmd, args)
 				local angle = Angle(0, target:EyeAngles().y + 90, 0)
 				for i = 1, Ragdoll:GetPhysicsObjectCount() do
 					local phys = Ragdoll:GetPhysicsObjectNum(i)
-					if phys and phys:IsValid() then
+					if phys and phys:IsValid() and VictimPos1[i] then
 						phys:EnableMotion(false)
 						-- Copy the vector
 						local pos = Vector(VictimPos1[i].x, VictimPos1[i].y, VictimPos1[i].z)
@@ -255,7 +256,7 @@ local function Ragdoll(ply, cmd, args)
 			end
 
 			if time ~= 0 then
-				timer.Simple(time, function()
+				timer.Create(target:SteamID() .. "FAdminRagdoll", time, 1, function()
 					if not IsValid(target) then return end
 					if IsValid(target.FAdminRagdoll) then
 						target:SetPos(target.FAdminRagdoll:GetPos())
@@ -270,7 +271,7 @@ local function Ragdoll(ply, cmd, args)
 				end)
 			end
 
-			if not string.find(RagdollType, "kick") and RagdollType ~= "unragdoll" and string.lower(cmd) ~= "unragdoll" then
+			if RagdollType ~= "unragdoll" and string.lower(cmd) ~= "unragdoll" then
 				target:FAdmin_SetGlobal("fadmin_ragdolled", true)
 			end
 		end

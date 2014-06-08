@@ -78,7 +78,9 @@ local function BuyPistol(ply, args)
 	weapon:SetWeaponClass(shipment.entity)
 	weapon.ShareGravgun = true
 	weapon:SetPos(tr.HitPos)
-	weapon.ammoadd = weapons.Get(shipment.entity) and weapons.Get(shipment.entity).Primary.DefaultClip
+	weapon.ammoadd = weapons.Get(shipment.entity) and (shipment.spareammo or weapons.Get(shipment.entity).Primary.DefaultClip)
+	weapon.clip1 = shipment.clip1
+	weapon.clip2 = shipment.clip2
 	weapon.nodupe = true
 	weapon:Spawn()
 
@@ -200,6 +202,9 @@ local function BuyShipment(ply, args)
 
 	crate:SetPos(Vector(tr.HitPos.x, tr.HitPos.y, tr.HitPos.z))
 	crate.nodupe = true
+	crate.ammoadd = found.spareammo
+	crate.clip1 = found.clip1
+	crate.clip2 = found.clip2
 	crate:Spawn()
 	crate:SetPlayer(ply)
 	if found.shipmodel then
@@ -377,8 +382,13 @@ local function BuyAmmo(ply, args)
 	end
 
 	local found
-	for k,v in pairs(GAMEMODE.AmmoTypes) do
-		if v.ammoType == args then
+	local num = tonumber(args)
+	if num and GAMEMODE.AmmoTypes[num] then
+		found = GAMEMODE.AmmoTypes[num]
+	else
+		for k,v in pairs(GAMEMODE.AmmoTypes) do
+			if v.ammoType ~= args then continue end
+
 			found = v
 			break
 		end

@@ -13,8 +13,15 @@ local ipairs = ipairs
 local pairs = pairs
 local unpack = unpack
 
-local ConVars = {}
-local HUDWidth
+local ConVars = {
+		HungerBackground = {0, 0, 0, 255},
+		HungerForeground = {30, 30, 120, 255},
+		HungerPercentageText = {255, 255, 255, 255},
+		StarvingText = {200, 0, 0, 255},
+		FoodEatenBackground = {0, 0, 0}, -- No alpha
+		FoodEatenForeground = {20, 100, 20} -- No alpha
+	}
+local HUDWidth = 0
 
 local FoodAteAlpha = -1
 local FoodAteY = 0
@@ -27,14 +34,6 @@ surface.CreateFont("HungerPlus", {
 	font = "ChatFont"})
 
 local function ReloadConVars()
-	ConVars = {
-		HungerBackground = {0, 0, 0, 255},
-		HungerForeground = {30, 30, 120, 255},
-		HungerPercentageText = {255, 255, 255, 255},
-		StarvingText = {200, 0, 0, 255},
-		FoodEatenBackground = {0, 0, 0}, -- No alpha
-		FoodEatenForeground = {20, 100, 20} -- No alpha
-	}
 	for name, Colour in pairs(ConVars) do
 		ConVars[name] = {}
 		for num, rgb in ipairs(Colour) do
@@ -49,7 +48,8 @@ local function ReloadConVars()
 		ConVars[name] = Color(unpack(ConVars[name]))
 	end
 
-	if not HUDWidth then
+	if HUDWidth == 0 then
+		HUDWidth = 240
 		cvars.AddChangeCallback("HudW", function() timer.Simple(0, ReloadConVars) end)
 	end
 

@@ -1,3 +1,16 @@
+local function updateAgenda(ply, agenda, text)
+	local txt = hook.Run("agendaUpdated", ply, agenda, text)
+
+	agenda.text = txt or text
+
+	for k,v in pairs(player.GetAll()) do
+		if v:getAgendaTable() ~= agenda then continue end
+
+		v:setSelfDarkRPVar("agenda", agenda.text)
+		DarkRP.notify(v, 2, 4, DarkRP.getPhrase("agenda_updated"))
+	end
+end
+
 local function CreateAgenda(ply, args)
 	local agenda = ply:getAgendaTable()
 	local plyTeam = ply:Team()
@@ -7,18 +20,26 @@ local function CreateAgenda(ply, args)
 		return ""
 	end
 
-	agenda.text = args
-
-	for k,v in pairs(player.GetAll()) do
-		if v:getAgendaTable() ~= agenda then continue end
-
-		v:setSelfDarkRPVar("agenda", agenda.text)
-		DarkRP.notify(v, 2, 4, DarkRP.getPhrase("agenda_updated"))
-	end
+	updateAgenda(ply, agenda, args)
 
 	return ""
 end
 DarkRP.defineChatCommand("agenda", CreateAgenda, 0.1)
+
+local function addAgenda(ply, args)
+	local agenda = ply:getAgendaTable()
+	local plyTeam = ply:Team()
+
+	if not agenda or agenda.Manager ~= plyTeam then
+		DarkRP.notify(ply, 1, 6, DarkRP.getPhrase("unable", "agenda", "Incorrect team"))
+		return ""
+	end
+
+	updateAgenda(ply, agenda, agenda.text .. '\n' .. args)
+
+	return ""
+end
+DarkRP.defineChatCommand("addagenda", addAgenda, 0.1)
 
 /*---------------------------------------------------------
  Mayor stuff
@@ -38,6 +59,7 @@ local function EnterLottery(answer, ent, initiator, target, TimeIsUp)
 		table.insert(LotteryPeople, target)
 		target:addMoney(-LotteryAmount)
 		DarkRP.notify(target, 0,4, DarkRP.getPhrase("lottery_entered", DarkRP.formatMoney(LotteryAmount)))
+		hook.Run("playerEnteredLottery", target)
 	elseif answer ~= nil and not table.HasValue(LotteryPeople, target) then
 		DarkRP.notify(target, 1,4, DarkRP.getPhrase("lottery_not_entered", "You"))
 	end
@@ -45,11 +67,14 @@ local function EnterLottery(answer, ent, initiator, target, TimeIsUp)
 	if TimeIsUp then
 		LotteryON = false
 		CanLottery = CurTime() + 60
+
 		if table.Count(LotteryPeople) == 0 then
 			DarkRP.notifyAll(1, 4, DarkRP.getPhrase("lottery_noone_entered"))
+			hook.Run("lotteryEnded", LotteryPeople, nil)
 			return
 		end
 		local chosen = LotteryPeople[math.random(1, #LotteryPeople)]
+		hook.Run("lotteryEnded", LotteryPeople, chosen, #LotteryPeople * LotteryAmount)
 		chosen:addMoney(#LotteryPeople * LotteryAmount)
 		DarkRP.notifyAll(0,10, DarkRP.getPhrase("lottery_won", chosen:Nick(), DarkRP.formatMoney(#LotteryPeople * LotteryAmount)))
 	end
@@ -83,6 +108,8 @@ local function DoLottery(ply, amount)
 	end
 
 	LotteryAmount = math.Clamp(math.floor(amount), GAMEMODE.Config.minlotterycost, GAMEMODE.Config.maxlotterycost)
+
+	hook.Run("lotteryStarted", ply, LotteryAmount)
 
 	LotteryON = true
 	LotteryPeople = {}
@@ -335,7 +362,7 @@ local function rp_RevokeLicense(ply, cmd, args)
 	local target = DarkRP.findPlayer(args[1])
 
 	if target then
-		target:setDarkRPVar("HasGunlicense", false)
+		target:setDarkRPVar("HasGunlicense", nil)
 
 		if ply:EntIndex() ~= 0 then
 			nick = ply:Nick()
@@ -366,9 +393,9 @@ concommand.Add("rp_revokelicense", rp_RevokeLicense)
 
 local function FinishRevokeLicense(vote, win)
 	if choice == 1 then
-		vote.target:setDarkRPVar("HasGunlicense", false)
+		vote.target:setDarkRPVar("HasGunlicense", nil)
 		vote.target:StripWeapons()
-		GAMEMODE:PlayerLoadout(vote.target)
+		gamemode.Call("PlayerLoadout", vote.target)
 		DarkRP.notifyAll(0, 4, DarkRP.getPhrase("gunlicense_removed", vote.target:Nick()))
 	else
 		DarkRP.notifyAll(0, 4, DarkRP.getPhrase("gunlicense_not_removed", vote.target:Nick()))

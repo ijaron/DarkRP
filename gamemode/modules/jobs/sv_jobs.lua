@@ -39,7 +39,7 @@ function meta:changeTeam(t, force)
 	local TEAM = RPExtraTeams[t]
 	if not TEAM then return false end
 
-	if TEAM.customCheck and not TEAM.customCheck(self) then
+	if TEAM.customCheck and not TEAM.customCheck(self) and not force then
 		DarkRP.notify(self, 1, 4, TEAM.CustomCheckFailMsg or DarkRP.getPhrase("unable", team.GetName(t), ""))
 		return false
 	end
@@ -83,7 +83,7 @@ function meta:changeTeam(t, force)
 
 
 	if self:getDarkRPVar("HasGunlicense") then
-		self:setDarkRPVar("HasGunlicense", false)
+		self:setDarkRPVar("HasGunlicense", nil)
 	end
 	if TEAM.hasLicense and GAMEMODE.Config.license then
 		self:setDarkRPVar("HasGunlicense", true)
@@ -92,18 +92,13 @@ function meta:changeTeam(t, force)
 	self.LastJob = CurTime()
 
 	if GAMEMODE.Config.removeclassitems then
-		for k, v in pairs(ents.FindByClass("microwave")) do
-			if v.allowed and type(v.allowed) == "table" and table.HasValue(v.allowed, t) then continue end
-			if v.SID == self.SID then v:Remove() end
-		end
-		for k, v in pairs(ents.FindByClass("gunlab")) do
-			if v.allowed and type(v.allowed) == "table" and table.HasValue(v.allowed, t) then continue end
-			if v.SID == self.SID then v:Remove() end
-		end
-
-		for k, v in pairs(ents.FindByClass("drug_lab")) do
-			if v.allowed and type(v.allowed) == "table" and table.HasValue(v.allowed, t) then continue end
-			if v.SID == self.SID then v:Remove() end
+		for k, v in pairs(DarkRPEntities) do
+			if GAMEMODE.Config.preventClassItemRemoval[v.ent] then continue end
+			if not v.allowed then continue end
+			if type(v.allowed) == "table" and (table.HasValue(v.allowed, t) or not table.HasValue(v.allowed, prevTeam)) then continue end
+			for _, e in pairs(ents.FindByClass(v.ent)) do
+				if e.SID == self.SID then e:Remove() end
+			end
 		end
 
 		for k,v in pairs(ents.FindByClass("spawned_shipment")) do
@@ -118,6 +113,10 @@ function meta:changeTeam(t, force)
 				ent:Remove()
 			end
 		end
+	end
+
+	if isMayor and GAMEMODE.Config.shouldResetLaws then
+		DarkRP.resetLaws()
 	end
 
 	self:SetTeam(t)
@@ -149,6 +148,7 @@ end
 
 function meta:updateJob(job)
 	self:setDarkRPVar("job", job)
+	self.LastJob = CurTime()
 
 	timer.Create(self:UniqueID() .. "jobtimer", GAMEMODE.Config.paydelay, 0, function()
 		if not IsValid(self) then return end
@@ -202,7 +202,6 @@ local function ChangeJob(ply, args)
 		DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("have_to_wait", math.ceil(10 - (CurTime() - ply.LastJob)), "/job"))
 		return ""
 	end
-	ply.LastJob = CurTime()
 
 	if not ply:Alive() then
 		DarkRP.notify(ply, 1, 4, DarkRP.getPhrase("unable", "/job", ""))
@@ -298,8 +297,7 @@ local function Demote(ply, args)
 		else
 			DarkRP.talkToPerson(p, team.GetColor(ply:Team()), DarkRP.getPhrase("demote") .. " " ..ply:Nick(),Color(255,0,0,255), DarkRP.getPhrase("i_want_to_demote_you", reason), p)
 			DarkRP.notifyAll(0, 4, DarkRP.getPhrase("demote_vote_started", ply:Nick(), p:Nick()))
-			DarkRP.log(DarkRP.getPhrase("demote_vote_started", ply:Nick(), p:Nick()) .. " (" .. reason .. ")",
-				false, Color(255, 128, 255, 255))
+			DarkRP.log(DarkRP.getPhrase("demote_vote_started", string.format("%s(%s)[%s]", ply:Nick(), ply:SteamID(), team.GetName(ply:Team())), string.format("%s(%s)[%s] for %s", p:Nick(), p:SteamID(), team.GetName(p:Team()), reason)), Color(255, 128, 255, 255))
 			p.IsBeingDemoted = true
 
 			DarkRP.createVote(p:Nick() .. ":\n"..DarkRP.getPhrase("demote_vote_text", reason), "demote", p, 20, FinishDemote,

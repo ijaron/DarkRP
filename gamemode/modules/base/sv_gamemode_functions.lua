@@ -5,16 +5,20 @@ function GM:Initialize()
 	self.BaseClass:Initialize()
 end
 
-function GM:playerBuyDoor( objPl, objEnt )
-	return true;
+function GM:playerBuyDoor(ply, ent)
+	if ply:Team() == TEAM_HOBO then
+		return false, DarkRP.getPhrase("door_hobo_unable")
+	end
+
+	return true
 end
 
-function GM:getDoorCost( objPl, objEnt )
-	return GAMEMODE.Config.doorcost ~= 0 and GAMEMODE.Config.doorcost or 30;
+function GM:getDoorCost(ply, ent)
+	return GAMEMODE.Config.doorcost ~= 0 and GAMEMODE.Config.doorcost or 30
 end
 
-function GM:getVehicleCost( objPl, objEnt )
-	return GAMEMODE.Config.vehiclecost ~= 0 and  GAMEMODE.Config.vehiclecost or 40;
+function GM:getVehicleCost(ply, ent)
+	return GAMEMODE.Config.vehiclecost ~= 0 and  GAMEMODE.Config.vehiclecost or 40
 end
 
 function GM:CanChangeRPName(ply, RPname)
@@ -138,12 +142,26 @@ function GM:PlayerSpawnedProp(ply, model, ent)
 	end
 end
 
-function GM:PlayerSpawnSENT(ply, class)
-	if GAMEMODE.Config.adminsents and ply:EntIndex() ~= 0 and not ply:IsAdmin() then
-		DarkRP.notify(ply, 1, 2, DarkRP.getPhrase("need_admin", "gm_spawnsent"))
+
+local function checkAdminSpawn(ply, configVar, errorStr)
+	local config = GAMEMODE.Config[configVar]
+
+	if (config == true or config == 1) and ply:EntIndex() ~= 0 and not ply:IsAdmin() then
+		DarkRP.notify(ply, 1, 2, DarkRP.getPhrase("need_admin", errorStr))
+		return false
+	elseif config == 2 and ply:EntIndex() ~= 0 and not ply:IsSuperAdmin() then
+		DarkRP.notify(ply, 1, 2, DarkRP.getPhrase("need_sadmin", errorStr))
+		return false
+	elseif config == 3 and ply:EntIndex() ~= 0 then
+		DarkRP.notify(ply, 1, 2, DarkRP.getPhrase("unable", errorStr, ""))
 		return false
 	end
-	return self.BaseClass:PlayerSpawnSENT(ply, class) and not ply:isArrested()
+
+	return true
+end
+
+function GM:PlayerSpawnSENT(ply, class)
+	return checkAdminSpawn(ply, "adminsents", "gm_spawnsent") and self.BaseClass:PlayerSpawnSENT(ply, class) and not ply:isArrested()
 end
 
 function GM:PlayerSpawnedSENT(ply, ent)
@@ -174,11 +192,7 @@ function GM:PlayerSpawnEffect(ply, model)
 end
 
 function GM:PlayerSpawnVehicle(ply, model, class, info)
-	if GAMEMODE.Config.adminvehicles and ply:EntIndex() ~= 0 and not ply:IsAdmin() then
-		DarkRP.notify(ply, 1, 2, DarkRP.getPhrase("need_admin", "gm_spawnvehicle"))
-		return false
-	end
-	return self.BaseClass:PlayerSpawnVehicle(ply, model, class, info) and not ply:isArrested()
+	return checkAdminSpawn(ply, "adminvehicles", "gm_spawnvehicle") and self.BaseClass:PlayerSpawnVehicle(ply, model, class, info) and not ply:isArrested()
 end
 
 function GM:PlayerSpawnedVehicle(ply, ent)
@@ -187,11 +201,7 @@ function GM:PlayerSpawnedVehicle(ply, ent)
 end
 
 function GM:PlayerSpawnNPC(ply, type, weapon)
-	if GAMEMODE.Config.adminnpcs and ply:EntIndex() ~= 0 and not ply:IsAdmin() then
-		DarkRP.notify(ply, 1, 2, DarkRP.getPhrase("need_admin", "gm_spawnnpc"))
-		return false
-	end
-	return self.BaseClass:PlayerSpawnNPC(ply, type, weapon) and not ply:isArrested()
+	return checkAdminSpawn(ply, "adminnpcs", "gm_spawnnpc") and self.BaseClass:PlayerSpawnNPC(ply, type, weapon) and not ply:isArrested()
 end
 
 function GM:PlayerSpawnedNPC(ply, ent)
@@ -292,6 +302,7 @@ end)
 hook.Add("PlayerDisconnected", "DarkRPCanHearVoice", function(ply)
 	if not ply.DrpCanHear then return end
 	for k,v in pairs(player.GetAll()) do
+		if not v.DrpCanHear then continue end
 		v.DrpCanHear[ply] = nil
 	end
 	timer.Destroy(ply:UserID() .. "DarkRPCanHearPlayersVoice")
@@ -425,7 +436,7 @@ function GM:PlayerDeath(ply, weapon, killer)
 	end
 
 	if IsValid(ply) and (ply ~= killer or ply.Slayed) and not ply:isArrested() then
-		ply:setDarkRPVar("wanted", false)
+		ply:setDarkRPVar("wanted", nil)
 		ply.DeathPos = nil
 		ply.Slayed = false
 	end
@@ -516,6 +527,7 @@ local function initPlayer(ply)
 	ply:initiateTax()
 
 	ply:updateJob(team.GetName(GAMEMODE.DefaultTeam))
+	ply:setSelfDarkRPVar("salary", RPExtraTeams[GAMEMODE.DefaultTeam].salary or GAMEMODE.Config.normalsalary)
 
 	ply:GetTable().Ownedz = { }
 	ply:GetTable().OwnedNumz = 0
@@ -608,10 +620,6 @@ function GM:PlayerSpawn(ply)
 	ply:CrosshairEnable()
 	ply:UnSpectate()
 	ply:SetHealth(tonumber(GAMEMODE.Config.startinghealth) or 100)
-
-	if not GAMEMODE.Config.showcrosshairs then
-		ply:CrosshairDisable()
-	end
 
 	-- Kill any colormod
 	SendUserMessage("blackScreen", ply, false)
@@ -719,6 +727,12 @@ function GM:PlayerLoadout(ply)
 		end
 	end
 
+	if RPExtraTeams[ply:Team()].ammo then
+		for k, v in pairs(RPExtraTeams[ply:Team()].ammo) do
+			ply:SetAmmo(v, k)
+		end
+	end
+
 	for k, v in pairs(self.Config.DefaultWeapons) do
 		ply:Give(v)
 	end
@@ -790,6 +804,10 @@ function GM:PlayerDisconnected(ply)
 
 	if isMayor and tobool(GetConVarNumber("DarkRP_LockDown")) then -- Stop the lockdown
 		DarkRP.unLockdown(ply)
+	end
+
+	if isMayor and GAMEMODE.Config.shouldResetLaws then
+		DarkRP.resetLaws()
 	end
 
 	if IsValid(ply.SleepRagdoll) then

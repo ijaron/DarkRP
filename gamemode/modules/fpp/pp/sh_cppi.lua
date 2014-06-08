@@ -22,38 +22,31 @@ local PLAYER = FindMetaTable("Player")
 function PLAYER:CPPIGetFriends()
 	if not self.Buddies then return CPPI.CPPI_DEFER end
 	local FriendsTable = {}
+
 	for k,v in pairs(self.Buddies) do
-		for _,ply in pairs(player.GetAll()) do
-			if ply:SteamID() == k then
-				table.insert(FriendsTable, ply)
-				break
-			end
-		end
+		table.insert(FriendsTable, k)
 	end
+
 	return FriendsTable
 end
 
 local ENTITY = FindMetaTable("Entity")
 function ENTITY:CPPIGetOwner()
-	if CLIENT then return nil, CPPI.CPPI_NOTIMPLEMENTED end
-	local Owner = self.FPPOwner
+	local Owner = FPP.entGetOwner(self)
 	if not IsValid(Owner) or not Owner:IsPlayer() then return Owner, self.FPPOwnerID end
 	return Owner, Owner:UniqueID()
 end
 
 if SERVER then
 	function ENTITY:CPPISetOwner(ply)
+		local steamId = IsValid(ply) and ply:IsPlayer() and ply:SteamID() or nil
 		self.FPPOwner = ply
-		self.FPPOwnerID = ply:SteamID()
-		if constraint.HasConstraints( self ) then
-			local ConstrainedEntities = constraint.GetAllConstrainedEntities( self )
-			for _,ent in pairs(ConstrainedEntities) do
-				if IsValid(ent) then
-					ent.FPPOwner = ply
-					ent.FPPOwnerID = ply:SteamID()
-				end
-			end
-		end
+		self.FPPOwnerID = steamId
+
+		self.FPPOwnerChanged = true
+		FPP.recalculateCanTouch(player.GetAll(), {self})
+		self.FPPOwnerChanged = nil
+
 		return true
 	end
 
@@ -77,18 +70,18 @@ if SERVER then
 	function ENTITY:CPPICanTool(ply, tool)
 		local Value = FPP.Protect.CanTool(ply, nil, tool, self)
 		if Value ~= false and Value ~= true then Value = true end
-		return Value-- fourth argument is entity, to avoid traces.
+		return Value
 	end
 
 	function ENTITY:CPPICanPhysgun(ply)
-		return FPP.PlayerCanTouchEnt(ply, self, "Physgun1", "FPP_PHYSGUN1")
+		return FPP.plyCanTouchEnt(ply, self, "Physgun")
 	end
 
 	function ENTITY:CPPICanPickup(ply)
-		return FPP.PlayerCanTouchEnt(ply, self, "Gravgun1", "FPP_GRAVGUN1")
+		return FPP.plyCanTouchEnt(ply, self, "Gravgun")
 	end
 
 	function ENTITY:CPPICanPunt(ply)
-		return FPP.PlayerCanTouchEnt(ply, self, "Gravgun1", "FPP_GRAVGUN1")
+		return FPP.plyCanTouchEnt(ply, self, "Gravgun")
 	end
 end

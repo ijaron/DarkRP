@@ -48,6 +48,7 @@ local english = {
 	owner_poor = "The %s owner is too poor to subsidize this sale!",
 
 	-- Police
+	Wanted_text = "Wanted!",
 	wanted = "Wanted by Police!\nReason: %s",
 	youre_arrested = "You have been arrested for %d seconds!",
 	youre_arrested_by = "You have been arrested by %s.",
@@ -172,7 +173,7 @@ local english = {
 	pocket_no_items = "Your pocket contains no items.",
 	drop_item = "Drop item",
 
-	bonus_destroying_entity = "bonus for destroying this illegal entiy.",
+	bonus_destroying_entity = "destroying this illegal entity.",
 
 	switched_burst = "Switched to burst-fire mode.",
 	switched_fully_auto = "Switched to fully automatic fire mode.",
@@ -481,6 +482,7 @@ local english = {
 	laws_of_the_land = "LAWS OF THE LAND",
 	law_added = "Law added.",
 	law_removed = "Law removed.",
+	law_reset = "Laws reset.",
 	law_too_short = "Law too short.",
 	laws_full = "The laws are full.",
 	default_law_change_denied = "You are not allowed to change the default laws.",

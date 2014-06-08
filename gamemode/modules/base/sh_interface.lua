@@ -1,6 +1,107 @@
+DarkRP.registerDarkRPVar = DarkRP.stub{
+	name = "registerDarkRPVar",
+	description = "Register a DarkRPVar by name. You should definitely register DarkRPVars. Registering DarkRPVars will make networking much more efficient.",
+	parameters = {
+		{
+			name = "name",
+			description = "The name of the DarkRPVar.",
+			type = "string",
+			optional = false
+		},
+		{
+			name = "writeFn",
+			description = "The function that writes a value for this DarkRPVar. Examples: net.WriteString, function(val) net.WriteUInt(val, 8) end.",
+			type = "function",
+			optional = false
+		},
+		{
+			name = "readFn",
+			description = "The function that reads a value for this DarkRPVar. Examples: net.ReadString, function() net.ReadUInt(8) end.",
+			type = "function",
+			optional = false
+		}
+	},
+	returns = {
+	},
+	metatable = DarkRP
+}
+
+DarkRP.writeNetDarkRPVar = DarkRP.stub{
+	name = "writeNetDarkRPVar",
+	description = "Internal function. You probably shouldn't need this. DarkRP calls this function when sending DarkRPVar net messages. This function writes the net data for a specific DarkRPVar.",
+	parameters = {
+		{
+			name = "name",
+			description = "The name of the DarkRPVar.",
+			type = "string",
+			optional = false
+		},
+		{
+			name = "value",
+			description = "The value of the DarkRPVar.",
+			type = "any",
+			optional = false
+		}
+	},
+	returns = {
+	},
+	metatable = DarkRP
+}
+
+DarkRP.writeNetDarkRPVarRemoval = DarkRP.stub{
+	name = "writeNetDarkRPVarRemoval",
+	description = "Internal function. You probably shouldn't need this. DarkRP calls this function when sending DarkRPVar net messages. This function sets a DarkRPVar to nil.",
+	parameters = {
+		{
+			name = "name",
+			description = "The name of the DarkRPVar.",
+			type = "string",
+			optional = false
+		}
+	},
+	returns = {
+	},
+	metatable = DarkRP
+}
+
+DarkRP.readNetDarkRPVar = DarkRP.stub{
+	name = "readNetDarkRPVar",
+	description = "Internal function. You probably shouldn't need this. DarkRP calls this function when reading DarkRPVar net messages. This function reads the net data for a specific DarkRPVar.",
+	parameters = {
+	},
+	returns = {
+		{
+			name = "name",
+			description = "The name of the DarkRPVar.",
+			type = "string"
+		},
+		{
+			name = "value",
+			description = "The value of the DarkRPVar.",
+			type = "any"
+		}
+	},
+	metatable = DarkRP
+}
+
+DarkRP.readNetDarkRPVarRemoval = DarkRP.stub{
+	name = "readNetDarkRPVarRemoval",
+	description = "Internal function. You probably shouldn't need this. DarkRP calls this function when reading DarkRPVar net messages. This function the removal of a DarkRPVar.",
+	parameters = {
+	},
+	returns = {
+		{
+			name = "name",
+			description = "The name of the DarkRPVar.",
+			type = "string"
+		}
+	},
+	metatable = DarkRP
+}
+
 DarkRP.findPlayer = DarkRP.stub{
 	name = "findPlayer",
-	description = "Find a player based on vague information.",
+	description = "Find a single player based on vague information.",
 	parameters = {
 		{
 			name = "info",
@@ -18,6 +119,42 @@ DarkRP.findPlayer = DarkRP.stub{
 	},
 	metatable = DarkRP
 }
+
+DarkRP.findPlayers = DarkRP.stub{
+	name = "findPlayers",
+	description = "Find a list of players based on vague information.",
+	parameters = {
+		{
+			name = "info",
+			description = "The information of the player (UserID, SteamID, name).",
+			type = "string",
+			optional = false
+		}
+	},
+	returns = {
+		{
+			name = "found",
+			description = "Table of players that match the description.",
+			type = "table"
+		}
+	},
+	metatable = DarkRP
+}
+
+DarkRP.nickSortedPlayers = DarkRP.stub{
+	name = "nickSortedPlayers",
+	description = "A table of players sorted by RP name.",
+	parameters = {},
+	returns = {
+		{
+			name = "players",
+			description = "The list of players sorted by RP name.",
+			type = "table"
+		}
+	},
+	metatable = DarkRP
+}
+
 
 DarkRP.formatMoney = DarkRP.stub{
 	name = "formatMoney",
@@ -40,6 +177,22 @@ DarkRP.formatMoney = DarkRP.stub{
 	metatable = DarkRP
 }
 
+-- This function is one of the few that's already defined before the stub is created
+DarkRP.stub{
+	name = "SteamName",
+	description = "Retrieve a player's real (steam) name.",
+	parameters = {
+
+	},
+	returns = {
+		{
+			name = "name",
+			description = "The player's steam name.",
+			type = "String"
+		}
+	},
+	metatable = DarkRP.PLAYER
+}
 
 DarkRP.PLAYER.getJobTable = DarkRP.stub{
 	name = "getJobTable",

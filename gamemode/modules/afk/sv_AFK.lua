@@ -33,14 +33,25 @@ local function SetAFK(ply)
 	else
 		ply.AFKDemote = CurTime() + GAMEMODE.Config.afkdemotetime
 		DarkRP.notifyAll(1, 5, DarkRP.getPhrase("player_no_longer_afk", rpname))
-		DarkRP.notify(ply, 0, 5, DarkRP.getPhrase("salary_restored", rpname))
+		DarkRP.notify(ply, 0, 5, DarkRP.getPhrase("salary_restored"))
 		ply:Spawn()
 		ply:UnLock()
 	end
 	ply:setDarkRPVar("job", ply:getDarkRPVar("AFK") and "AFK" or ply:getDarkRPVar("AFKDemoted") and team.GetName(ply:Team()) or ply.OldJob)
-	ply:setDarkRPVar("salary", ply:getDarkRPVar("AFK") and 0 or ply.OldSalary or 0)
+	ply:setSelfDarkRPVar("salary", ply:getDarkRPVar("AFK") and 0 or ply.OldSalary or 0)
 end
-DarkRP.defineChatCommand("afk", SetAFK)
+
+DarkRP.defineChatCommand("afk", function(ply)
+	if ply.DarkRPLastAFK and not ply:getDarkRPVar("AFK") and ply.DarkRPLastAFK > CurTime() - GAMEMODE.Config.AFKDelay then
+		DarkRP.notify(ply, 0, 5, DarkRP.getPhrase("unable", "go AFK", "Spam prevention."))
+		return ""
+	end
+
+	ply.DarkRPLastAFK = CurTime()
+	SetAFK(ply)
+
+	return ""
+end)
 
 local function StartAFKOnPlayer(ply)
 	ply.AFKDemote = CurTime() + GAMEMODE.Config.afkdemotetime
@@ -51,7 +62,7 @@ local function AFKTimer(ply, key)
 	ply.AFKDemote = CurTime() + GAMEMODE.Config.afkdemotetime
 	if ply:getDarkRPVar("AFKDemoted") then
 		ply:setDarkRPVar("job", team.GetName(ply:Team()))
-		timer.Simple(3, function() ply:setSelfDarkRPVar("AFKDemoted", false) end)
+		timer.Simple(3, function() ply:setSelfDarkRPVar("AFKDemoted", nil) end)
 	end
 end
 hook.Add("KeyPress", "DarkRPKeyReleasedCheck", AFKTimer)
